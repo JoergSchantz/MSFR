@@ -175,17 +175,23 @@
 
 
 #' @keywords internal
-.loglik_ecm <- function(Sig_s1,  ds_s, n_s, cov_s)
+.loglik_ecm <- function( Sig_s1, ds_s, n_s, cov_s )
 {
-  S <- length(n_s)
+  S <- length( n_s )
   #####log likelihood value for each study
-  val_s <- c()
-  for(s in 1:S){
-    val_s[s] <- - (n_s[s]/2) * log(ds_s[[s]]) - (n_s[s]/2) * .tr(Sig_s1[[s]] %*% cov_s[[s]])
-  }
+  # val_s <- c()
+  # for(s in 1:S){
+  #   val_s[s] <- - (n_s[s]/2) * log(ds_s[[s]]) - (n_s[s]/2) * .tr(Sig_s1[[s]] %*% cov_s[[s]])
+  # }
+  val_s <- sapply(
+    1:S,
+    function( s ) {
+      - ( n_s[s]/2 ) * log( ds_s[[s]] ) - ( n_s[s]/2 ) * .tr( Sig_s1[[s]] %*% cov_s[[s]] )
+    }
+  )
   #####sum of each study-likelihood
-  val_tot <- sum(val_s)
-  return(val_tot)
+  val_tot <- sum( val_s )
+  return( val_tot )
 }
 
 
