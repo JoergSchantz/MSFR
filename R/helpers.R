@@ -112,70 +112,65 @@
 #' @importFrom statmod vecmat 
 #' @importFrom statmod matvec
 #' @keywords internal
-.exp_values_fr <- function(Phi, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE)
+.exp_values_fr <- function( Phi, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE )
 {
-  k <- dim(Phi)[2]
-  I_k <- diag(1, k)
-  S <- length(Psi_s)
+  k <- dim( Phi )[2]
+  I_k <- diag( 1, k )
+  S <- length( Psi_s )
   
   ###defining objects
-  I_j <- list()
   Sig_s <- list()
   ds_s <- list()
   I_tot <- list()
-  LambTOT <- list()
+  # LambTOT <- list()
   Sig_s1 <- list()
-  delta_Lambda <- list()
   delta_Phi <- list()
-  Delta_Lambda <- list()
   Delta_Phi <- list()
   Covfcfs <- list()
-  Txsfs <- list()
   Txsfcs <- list()
-  Tfsfs <- list()
   Tfcsfcs <- list()
-  Tfcsfs <- list()
-  Woodbury1_f <- list()
-  Woodbury1_l <- list()
-  Woodbury2_f <- list()
-  Woodbury2_l <- list()
   Woodbury_f <- list()
   E_fis_x_is <- list()
-  E_lis_x_is <- list()
   
-  for (s in 1:S){
+  for ( s in 1:S ){
     ds_s[[s]] <- NULL
     #j_s[s] <- c(dim(Lambda_s[[s]])[[2]])
-    #I_j[[s]] <- diag(1, j_s[s])
-    Sig_s[[s]] <- Phi %*% t(Phi) + Psi_s[[s]]
-    if (getdet)  {ds_s[[s]] <- det(Sig_s[[s]])}
-    I_tot[[s]] <- diag(1, k )
-    LambTOT[[s]] <- Phi
-    Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
-                                    solve(I_tot[[s]] + (t(LambTOT[[s]]) %*% statmod::vecmat(diag(Psi_s1[[s]]),
-                                                                                            LambTOT[[s]]))) %*% statmod::matvec(t(LambTOT[[s]]), diag(Psi_s1[[s]])))
-    #delta_Lambda[[s]] <- t(Lambda_s[[s]]) %*% Sig_s1[[s]]
-    delta_Phi[[s]] <- t(Phi) %*% Sig_s1[[s]]
-    #Delta_Lambda[[s]] <- I_j[[s]] - (t(Lambda_s[[s]]) %*% Sig_s1[[s]] %*% Lambda_s[[s]])
-    Delta_Phi[[s]] <- I_k - (t(Phi) %*% Sig_s1[[s]] %*% Phi)
-    #Covfcfs[[s]] <- -t(Phi) %*% Sig_s1[[s]] %*% Lambda_s[[s]]
-    #Txsfs[[s]] <- cov_s[[s]] %*% t(delta_Lambda[[s]])
-    Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
-    #Tfsfs[[s]] <- delta_Lambda[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Delta_Lambda[[s]]
-    Tfcsfcs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Phi[[s]]) + Delta_Phi[[s]]
-    #Tfcsfs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Covfcfs[[s]]
+    # Sig_s[[s]] <- Phi %*% t(Phi) + Psi_s[[s]]
+    Sig_s[[s]] <- tcrossprod( Phi ) + Psi_s[[s]]
+    if ( getdet ) { ds_s[[s]] <- det( Sig_s[[s]] ) }
+    I_tot[[s]] <- diag( 1, k )
+    # LambTOT[[s]] <- Phi
+    # Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
+    #                                solve(I_tot[[s]] + (t(LambTOT[[s]]) %*% statmod::vecmat(diag(Psi_s1[[s]]),
+    #
+    Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), Phi) %*%
+                                    solve(I_tot[[s]] + (t(Phi) %*% statmod::vecmat(diag(Psi_s1[[s]]),
+                                                                                             Phi ))) %*% statmod::matvec(t( Phi ), diag(Psi_s1[[s]])))
+    # delta_Phi[[s]] <- t(Phi) %*% Sig_s1[[s]]
+    delta_Phi[[s]] <- crossprod( Phi, Sig_s1[[s]] )
+    # Delta_Phi[[s]] <- I_k - (t(Phi) %*% Sig_s1[[s]] %*% Phi)
+    Delta_Phi[[s]] <- I_k - ( crossprod( Phi, Sig_s1[[s]] ) %*% Phi )
+    # Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
+    Txsfcs[[s]] <- tcrossprod( cov_s[[s]], delta_Phi[[s]] )
+    # Tfcsfcs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Phi[[s]]) + Delta_Phi[[s]]
+    Tfcsfcs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Phi[[s]] ) + Delta_Phi[[s]]
+
     ##new part for beta
-    #Woodbury1_f[[s]] <- diag(1/diag(Psi_s[[s]])) - diag(1/diag(Psi_s[[s]])) %*% Lambda_s[[s]] %*% solve(I_j[[s]] + t(Lambda_s[[s]]) %*% diag(1/diag(Psi_s[[s]])) %*% Lambda_s[[s]]) %*% t(Lambda_s[[s]]) %*% diag(1/diag(Psi_s[[s]]))
-    #Woodbury1_l[[s]] <- diag(1/diag(Psi_s[[s]])) - diag(1/diag(Psi_s[[s]])) %*% Phi %*% solve(I_k + t(Phi) %*% diag(1/diag(Psi_s[[s]])) %*% Phi) %*% t(Phi) %*% diag(1/diag(Psi_s[[s]]))
-    Woodbury_f[[s]] <- solve(I_k + t(Phi) %*%  diag(1/diag(Psi_s[[s]])) %*% Phi) %*% t(Phi) %*% diag(1/diag(Psi_s[[s]]))
-    #Woodbury2_l[[s]] <- solve(I_j[[s]] + t(Lambda_s[[s]]) %*%  Woodbury1_l[[s]] %*% Lambda_s[[s]]) %*% t(Lambda_s[[s]]) %*% Woodbury1_l[[s]]  
-    E_fis_x_is[[s]] <- Woodbury_f[[s]] %*% t(X_s_tilde[[s]])
-    #E_lis_x_is[[s]] <- Woodbury2_l[[s]] %*% t(X_s_tilde[[s]])
+    # Woodbury_f[[s]] <- solve(I_k + t(Phi) %*%  diag(1/diag(Psi_s[[s]])) %*% Phi) %*% t(Phi) %*% diag(1/diag(Psi_s[[s]]))
+    Woodbury_f[[s]] <- .wb_identity( Phi, .inv_Psi( Psi_s[[s]] ), I_k )
+    # E_fis_x_is[[s]] <- Woodbury_f[[s]] %*% t(X_s_tilde[[s]])
+    E_fis_x_is[[s]] <- tcrossprod( Woodbury_f[[s]], X_s_tilde[[s]] )
+
   }
-  return(list(Txsfs = Txsfs, Txsfcs = Txsfcs, Tfsfs = Tfsfs,
-              Tfcsfcs =  Tfcsfcs, Tfcsfs = Tfcsfs, 
-              E_fis_x_is = E_fis_x_is, E_lis_x_is = E_lis_x_is, 
-              ds_s=ds_s,  Sig_s1 = Sig_s1))
+  return(
+    list( 
+      Txsfcs = Txsfcs,
+      Tfcsfcs =  Tfcsfcs,
+      E_fis_x_is = E_fis_x_is, 
+      ds_s=ds_s,
+      Sig_s1 = Sig_s1
+    )
+  )
 }
 
 
