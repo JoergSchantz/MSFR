@@ -24,7 +24,8 @@
 }
 
 
-#' @import statmod
+#' @importFrom statmod vecmat 
+#' @importFrom statmod matvec
 #' @keywords internal
 .exp_values <- function(Phi, Lambda_s, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE)
 {
@@ -108,7 +109,8 @@
 }
 
 
-#' @import statmod
+#' @importFrom statmod vecmat 
+#' @importFrom statmod matvec
 #' @keywords internal
 .exp_values_fr <- function(Phi, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE)
 {
