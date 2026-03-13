@@ -137,7 +137,7 @@
     #j_s[s] <- c(dim(Lambda_s[[s]])[[2]])
     # Sig_s[[s]] <- Phi %*% t(Phi) + Psi_s[[s]]
     Sig_s[[s]] <- tcrossprod( Phi ) + Psi_s[[s]]
-    if ( getdet ) { ds_s[[s]] <- det( Sig_s[[s]] ) }
+    if ( getdet ) ds_s[[s]] <- det( Sig_s[[s]] )
     I_tot[[s]] <- diag( 1, k )
     # LambTOT[[s]] <- Phi
     # Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
