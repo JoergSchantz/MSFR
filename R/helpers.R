@@ -18,8 +18,6 @@
   # A: being either Lambda_s[[s]] or Phi matrix
   # I: Study (un-)specific Identity matrix
   cp <- crossprod( A, W )               # to save computation time
-  
-  # A %*% solve( I + cp %*% A ) %*% cp  # A %*% ... is too much 
   solve( I + cp %*% A ) %*% cp
 }
 
@@ -138,13 +136,13 @@
     # Sig_s[[s]] <- Phi %*% t(Phi) + Psi_s[[s]]
     Sig_s[[s]] <- tcrossprod( Phi ) + Psi_s[[s]]
     if ( getdet ) ds_s[[s]] <- det( Sig_s[[s]] )
-    I_tot[[s]] <- diag( 1, k )
+    # I_tot[[s]] <- diag( 1, k )
     # LambTOT[[s]] <- Phi
     # Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
     #                                solve(I_tot[[s]] + (t(LambTOT[[s]]) %*% statmod::vecmat(diag(Psi_s1[[s]]),
     #
     Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), Phi) %*%
-                                    solve(I_tot[[s]] + (t(Phi) %*% statmod::vecmat(diag(Psi_s1[[s]]),
+                                    solve(I_k + (t(Phi) %*% statmod::vecmat(diag(Psi_s1[[s]]),
                                                                                              Phi ))) %*% statmod::matvec(t( Phi ), diag(Psi_s1[[s]])))
     # delta_Phi[[s]] <- t(Phi) %*% Sig_s1[[s]]
     delta_Phi[[s]] <- crossprod( Phi, Sig_s1[[s]] )
