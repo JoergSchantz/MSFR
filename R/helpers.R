@@ -91,7 +91,7 @@
     # Covfcfs[[s]] <- -t(Phi) %*% Sig_s1[[s]] %*% Lambda_s[[s]]
     Covfcfs[[s]] <- -wb2_f[[s]] %*% Lambda_s[[s]]
     # Txsfs[[s]] <- cov_s[[s]] %*% t(delta_Lambda[[s]])
-    Txsfs[[s]] <- tcrossprod( cov_s[[s]], wb2_l[[2]] )
+    Txsfs[[s]] <- tcrossprod( cov_s[[s]], wb2_l[[s]] )
     # Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
     Txsfcs[[s]] <- tcrossprod( cov_s[[s]], wb2_f[[s]] )
     # Tfsfs[[s]] <- delta_Lambda[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Delta_Lambda[[s]]
