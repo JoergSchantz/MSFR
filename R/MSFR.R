@@ -345,7 +345,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     #if(robust & (!mcd)) cov_s[[s]] <- covRob(X_s[[s]], corr = corr)$cov
     }
   ######E-step
-  out <- .exp_values(Phi, Lambda_s, Psi_s, Psi_s1, cov_s, X_s, getdet = TRUE)
+  out <- .exp_values(Phi, Lambda_s, Psi_s, cov_s, X_s, getdet = TRUE)
   Sig_s1 <- .inv_Sig( Psi_s1, Lambda_s, Phi )
   ds_s <- out$ds_s
   l_stop0 <- 0
@@ -357,7 +357,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
    ###########CM1 ---------------------------------------------------------------------------------------
 
    ######expected values
-   out <- .exp_values(Phi, Lambda_s, Psi_s, Psi_s1, cov_s, X_s)
+   out <- .exp_values(Phi, Lambda_s, Psi_s, cov_s, X_s)
    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs; Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
    ######update  of Phi_s
    Psi_new <- list()
@@ -377,7 +377,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
    ###########CM2 ---------------------------------------------------------------------------------------
 
    ######expected values
-   out<- .exp_values(Phi, Lambda_s, Psi_new, Psi_new1, cov_s, X_s)
+   out<- .exp_values(Phi, Lambda_s, Psi_new, cov_s, X_s)
    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
    Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
 
@@ -397,7 +397,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
    ########CM3 ---------------------------------------------------------------------------------------
 
    ######expected values
-   out <- .exp_values(Phi_new, Lambda_s, Psi_new, Psi_new1, cov_s, X_s)
+   out <- .exp_values(Phi_new, Lambda_s, Psi_new, cov_s, X_s)
    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
    Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
 
@@ -410,7 +410,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
    ########CM4: new part for beta---------------------------------------------------------------------------------------
    
    ######expected values
-   out <-  .exp_values(Phi_new, Lambda_new, Psi_new, Psi_new1, cov_s, X_s)
+   out <-  .exp_values(Phi_new, Lambda_new, Psi_new, cov_s, X_s)
    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
    Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs; E_fis_x_is <- out$E_fis_x_is; E_lis_x_is <- out$E_lis_x_is
    
@@ -486,13 +486,13 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
 #   }
 
   ###########stopping rule
-  out <- .exp_values(Phi_new, Lambda_new, Psi_new, Psi_new1, cov_s,X_s, getdet = TRUE)
-  Sig_s1 <- out$Sig_s1
+  out <- .exp_values(Phi_new, Lambda_new, Psi_new, cov_s,X_s, getdet = TRUE)
+  Sig_s1 <- .inv_Sig( Psi_new1, Lambda_new, Phi_new )
   ds_s <- out$ds_s
   l1 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
   a <- (l1 - l0)/ (l0-lm1)
   l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
-  l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+  l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s) # why assign t+1 step likelihood already? 
   if((trace) & (i %% 1000 == 0))  cat("i=", i, "Criterion for convergence ", abs(l_stop-l_stop0),  "\n")
   if((abs(l_stop-l_stop0)<tol) & i > 1 & l_stop != Inf) break
   Psi_s <- Psi_new
@@ -501,9 +501,10 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   beta <- beta_new
   if (constraint == "block_lower2") theta <- theta_new
   Psi_s1 <- Psi_new1
-  lm1 <- l0
+  lm1 <- l0 # supposed to be the t-1 step likelihood, no? but is now assigned t likelihood, see line 495 
   l0 <- l1
   l_stop0 <- l_stop
+  }
 
   #####AIC and BIC computation
 
@@ -512,12 +513,12 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   n_tot <- sum(n_s)
   AIC <- -2 * l1 + npar * 2
   BIC <- -2 * l1 + npar * log(n_tot)
-  }
+
   ############return output
   res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, psi_s = psi_s, loglik = l1,
               AIC = AIC, BIC = BIC, npar=npar,
               iter = i,  cov_s = cov_s,  n_s = n_s, constraint=constraint)
- return(res)
+  return(res)
 }
 
 
