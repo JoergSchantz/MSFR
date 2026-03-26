@@ -346,7 +346,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     }
   ######E-step
   out <- .exp_values(Phi, Lambda_s, Psi_s, Psi_s1, cov_s, X_s, getdet = TRUE)
-  Sig_s1 <- out$Sig_s1
+  Sig_s1 <- .inv_Sig( Psi_s1, Lambda_s, Phi )
   ds_s <- out$ds_s
   l_stop0 <- 0
   lm1 <- 0

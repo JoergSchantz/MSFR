@@ -66,7 +66,14 @@
 #' @importFrom statmod vecmat 
 #' @importFrom statmod matvec
 #' @keywords internal
-.exp_values <- function(Phi, Lambda_s, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE)
+.exp_values <- function(
+  Phi, 
+  Lambda_s, 
+  Psi_s, 
+  cov_s, 
+  X_s_tilde, 
+  getdet = FALSE
+)
 {
   k <- dim(Phi)[2]
   I_k <- diag(1, k)
@@ -77,9 +84,6 @@
   I_j <- list()
   Sig_s <- list()
   ds_s <- list()
-  I_tot <- list()
-  LambTOT <- list()
-  Sig_s1 <- list()
   delta_Lambda <- list()
   delta_Phi <- list()
   Delta_Lambda <- list()
@@ -92,8 +96,6 @@
   Tfcsfs <- list()
   wb1_f <- list()
   wb1_l <- list()
-  wb2_f <- list()
-  wb2_l <- list()
   E_fis_x_is <- list()
   E_lis_x_is <- list()
   
@@ -103,48 +105,42 @@
     I_j[[s]] <- diag( 1, j_s[s] )
     Sig_s[[s]] <- tcrossprod( Phi ) + tcrossprod( Lambda_s[[s]] ) + Psi_s[[s]]
     if (getdet) { ds_s[[s]] <- det( Sig_s[[s]] ) }
-    I_tot[[s]] <- diag( 1, k + j_s[s] )
-    LambTOT[[s]] <- cbind( Phi, Lambda_s[[s]] )
-    # needs more work here ... seems questionable in general (see explanation in paper)
-    Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
-                                    solve(I_tot[[s]] + (t(LambTOT[[s]]) %*% statmod::vecmat(diag(Psi_s1[[s]]),
-                                                                                            LambTOT[[s]]))) %*% statmod::matvec(t(LambTOT[[s]]), diag(Psi_s1[[s]])))
     # ----
     ##new part for beta
     inv_Psi_s <- .inv_Psi( Psi_s[[s]] ) 
     wb1_f[[s]] <- inv_Psi_s - inv_Psi_s %*% Lambda_s[[s]] %*% .wb_identity( Lambda_s[[s]], inv_Psi_s, I_j[[s]] )
     wb1_l[[s]] <- inv_Psi_s - inv_Psi_s %*% Phi %*% .wb_identity( Phi, inv_Psi_s, I_k ) 
-    wb2_f[[s]] <- .wb_identity( Phi, wb1_f[[s]], I_k ) 
-    wb2_l[[s]] <- .wb_identity( Lambda_s[[s]], wb1_l[[s]], I_j[[s]] ) 
-    E_fis_x_is[[s]] <- tcrossprod( wb2_f[[s]], X_s_tilde[[s]] )
-    E_lis_x_is[[s]] <- tcrossprod( wb2_l[[s]], X_s_tilde[[s]] )
+    delta_Phi[[s]] <- .wb_identity( Phi, wb1_f[[s]], I_k ) 
+    delta_Lambda[[s]] <- .wb_identity( Lambda_s[[s]], wb1_l[[s]], I_j[[s]] ) 
+    E_fis_x_is[[s]] <- tcrossprod( delta_Phi[[s]], X_s_tilde[[s]] )
+    E_lis_x_is[[s]] <- tcrossprod( delta_Lambda[[s]], X_s_tilde[[s]] )
 
     # delta_Lambda[[s]] <- crossprod( Lambda_s[[s]], Sig_s1[[s]] )
     # delta_Phi[[s]] <- crossprod( Phi, Sig_s1[[st]] )
 
     # THE FOLLOWING SUBSTITUTIONS HAVE NOT BEEN TESTED YET BUT SEEM REASONABLE ----
     # Delta_Lambda[[s]] <- I_j[[s]] - (t(Lambda_s[[s]]) %*% Sig_s1[[s]] %*% Lambda_s[[s]])
-    Delta_Lambda[[s]] <- I_j[[s]] - ( wb2_l[[s]] %*% Lambda_s[[s]] )
+    Delta_Lambda[[s]] <- I_j[[s]] - ( delta_Lambda[[s]] %*% Lambda_s[[s]] )
     # Delta_Phi[[s]] <- I_k - (t(Phi) %*% Sig_s1[[s]] %*% Phi)
-    Delta_Phi[[s]] <- I_k - ( wb2_f[[s]] %*% Phi )
+    Delta_Phi[[s]] <- I_k - ( delta_Phi[[s]] %*% Phi )
     # Covfcfs[[s]] <- -t(Phi) %*% Sig_s1[[s]] %*% Lambda_s[[s]]
-    Covfcfs[[s]] <- -wb2_f[[s]] %*% Lambda_s[[s]]
+    Covfcfs[[s]] <- -delta_Phi[[s]] %*% Lambda_s[[s]]
     # Txsfs[[s]] <- cov_s[[s]] %*% t(delta_Lambda[[s]])
-    Txsfs[[s]] <- tcrossprod( cov_s[[s]], wb2_l[[s]] )
+    Txsfs[[s]] <- tcrossprod( cov_s[[s]], delta_Lambda[[s]] )
     # Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
-    Txsfcs[[s]] <- tcrossprod( cov_s[[s]], wb2_f[[s]] )
+    Txsfcs[[s]] <- tcrossprod( cov_s[[s]], delta_Phi[[s]] )
     # Tfsfs[[s]] <- delta_Lambda[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Delta_Lambda[[s]]
-    Tfsfs[[s]] <- wb2_l[[s]] %*% tcrossprod( cov_s[[s]], wb2_l[[s]] ) + Delta_Lambda[[s]]
+    Tfsfs[[s]] <- delta_Lambda[[s]] %*% tcrossprod( cov_s[[s]], delta_Lambda[[s]] ) + Delta_Lambda[[s]]
     # Tfcsfcs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Phi[[s]]) + Delta_Phi[[s]]
-    Tfcsfcs[[s]] <- wb2_f[[s]] %*% tcrossprod( cov_s[[s]], wb2_f[[s]] ) + Delta_Phi[[s]]
+    Tfcsfcs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Phi[[s]] ) + Delta_Phi[[s]]
     # Tfcsfs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Covfcfs[[s]]
-    Tfcsfs[[s]] <- wb2_f[[s]] %*% tcrossprod( cov_s[[s]], wb2_l[[s]] ) + Covfcfs[[s]]
+    Tfcsfs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Lambda[[s]] ) + Covfcfs[[s]]
     # ----
   }
   return(list(Txsfs = Txsfs, Txsfcs = Txsfcs, Tfsfs = Tfsfs,
               Tfcsfcs =  Tfcsfcs, Tfcsfs = Tfcsfs, 
               E_fis_x_is = E_fis_x_is, E_lis_x_is = E_lis_x_is, 
-              ds_s=ds_s,  Sig_s1 = Sig_s1))
+              ds_s=ds_s))
 }
 
 
