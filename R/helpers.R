@@ -34,6 +34,12 @@
   solve( I + cp %*% A ) %*% cp
 }
 
+#' @keywords internal
+#' simple generator for Sigma matrix 
+.build_Sig <-  function( Phi, Lambda_s, Psi_s ){
+  tcrossprod( Phi ) + tcrossprod( Lambda_s ) + Psi_s
+}
+
 #' @keyword internal
 #' Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
 #' until I figure out how to retrieve it from the Woodbury Identity
