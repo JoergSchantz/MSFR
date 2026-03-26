@@ -3,6 +3,19 @@
 ## lets goooo
 
 #' @keywords internal
+#' since we are storing our e.g. study specific matrices, in lists its good to have
+#' function that converts all of these lists into an new list of arguemnts for any 
+#' usecase. This enables us to make use of the vectorization of R.
+.make_args <-  function( LIST, ... ) {
+  # check if all sublists have same length
+  if ( ! length( unique( lengths( LIST ) ) ) == 1 ) {
+    stop("Unequal number of elements!") # Improve message in the future
+  }
+  n <-  unique( lengths( LIST ) )
+  lapply( 1:n, function( s ) { lapply( LIST, `[[`, s ) } )
+}
+
+#' @keywords internal
 #' Computes trace of a matrix
 .tr <- function( A ) sum( diag( A ) )
 
@@ -21,6 +34,34 @@
   solve( I + cp %*% A ) %*% cp
 }
 
+#' @keyword internal
+#' Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
+#' until I figure out how to retrieve it from the Woodbury Identity
+.inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
+  k <- dim( Phi )[2]
+  S <- length( Lambda_s )
+  j_s <-  sapply( Lambda_s, function( l ) dim( l )[2] )
+  I_tot <- lapply( k + j_s, diag, x = 1 )
+  LambTOT <-  lapply( Lambda_s, cbind, Phi )
+  list_of_args <- .make_args( list( Psi_s1, I_tot, LambTOT ) )
+
+  lapply(
+    list_of_args,
+    do.call, 
+    what = function( ps1, i_tot, lamtot ) {
+      ps1 - (
+        statmod::vecmat( diag( ps1 ), lamtot ) %*%
+          solve(
+            i_tot + (
+              t( lamtot ) %*% 
+                statmod::vecmat( diag( ps1 ), lamtot )
+              )
+          ) %*% 
+        statmod::matvec( t( lamtot ), diag( ps1 ) )
+      )             
+    }
+  ) 
+}
 
 #' @importFrom statmod vecmat 
 #' @importFrom statmod matvec
