@@ -39,7 +39,7 @@
   exp_xl <- Map( .get_exp_xl, delta_Lambda, cov_s )
   exp_xf <- Map( .get_exp_xf, delta_Phi, cov_s )
   exp_ll <- Map( .get_exp_ll, Lambda_s, delta_Lambda, cov_s, I_j )
-  exp_ff <- Map( .get_Exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) )
+  exp_ff <- Map( .get_exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) )
   exp_fl <- Map( .get_exp_fl, Lambda_s, delta_Phi, delta_Lambda, cov_s )
 
   return(
@@ -56,7 +56,7 @@
 #' @keywords internal
 #' same as .step_cm_1()
 .step_cm_2 <- function( Phi, Lambda_s, delta_Phi, delta_Lambda, cov_s, I_k ) {
-  exp_ff <- Map( .get_Exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) )
+  exp_ff <- Map( .get_exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) )
   exp_fl <- Map( .get_exp_fl, Lambda_s, delta_Phi, delta_Lambda, cov_s )
   exp_xf <- Map( .get_exp_xf, delta_Phi, cov_s )
 
@@ -110,7 +110,7 @@
 #' @keywords internal
 #' 2nd application of the Woodbury Identity
 .wb_identity2 <- function( inv_Psi, A, I ){
-  inv_Psi - inv_Psi %*% A %*% .wb_identity( A, inv_Psi_s, I )
+  inv_Psi - inv_Psi %*% A %*% .wb_identity( A, inv_Psi, I )
 }
 
 #' @keywords internal
