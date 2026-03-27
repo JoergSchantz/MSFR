@@ -23,56 +23,9 @@
 #' Inverts often used Psi matrix more efficiently than solve()
 .inv_Psi <- function( Psi ) diag( 1 / diag( Psi ) )
 
+# just keeping it for the moment
 #' @keywords internal
-#' Implementation of Woodbury Identity. This will most likely only work 
-#' inside this package and is not meant to be used outside of it.
-#' @references O. Morgenstern and M. A. Woodbury, “Stability of Inverses of Input-Output Matrices,” Econometrica 18 (1950): 190.
-.wb_identity <- function( A, W, I) {
-  # A: being either Lambda_s[[s]] or Phi matrix
-  # I: Study (un-)specific Identity matrix
-  cp <- crossprod( A, W )               # to save computation time
-  solve( I + cp %*% A ) %*% cp
-}
-
-#' @keywords internal
-#' simple generator for Sigma matrix 
-.build_Sig <-  function( Phi, Lambda_s, Psi_s ){
-  tcrossprod( Phi ) + tcrossprod( Lambda_s ) + Psi_s
-}
-
-#' @keyword internal
-#' Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
-#' until I figure out how to retrieve it from the Woodbury Identity
-.inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
-  k <- dim( Phi )[2]
-  S <- length( Lambda_s )
-  j_s <-  sapply( Lambda_s, function( l ) dim( l )[2] )
-  I_tot <- lapply( k + j_s, diag, x = 1 )
-  LambTOT <-  lapply( Lambda_s, cbind, Phi )
-  list_of_args <- .make_args( list( Psi_s1, I_tot, LambTOT ) )
-
-  lapply(
-    list_of_args,
-    do.call, 
-    what = function( ps1, i_tot, lamtot ) {
-      ps1 - (
-        statmod::vecmat( diag( ps1 ), lamtot ) %*%
-          solve(
-            i_tot + (
-              t( lamtot ) %*% 
-                statmod::vecmat( diag( ps1 ), lamtot )
-              )
-          ) %*% 
-        statmod::matvec( t( lamtot ), diag( ps1 ) )
-      )             
-    }
-  ) 
-}
-
-#' @importFrom statmod vecmat 
-#' @importFrom statmod matvec
-#' @keywords internal
-.exp_values <- function(
+.Exp_values <- function(
   Phi, 
   Lambda_s, 
   Psi_s, 
