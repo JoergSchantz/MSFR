@@ -99,7 +99,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   B <- do.call( rbind, B_s )
 
   second_part <- solve(t(B) %*% B)
-  theta <- .param2vect(start, constraint = "loswer_block2")
+  theta <- .param2vect(start, constraint)
 
   #######defining objects
   Psi_s1 <- Psi_s <- cov_s <- list()
