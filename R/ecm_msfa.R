@@ -85,21 +85,21 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
 {
   S <- length(X_s)
   ####### extract elements from input list 'start'
-  Phi <- replicate( S, start$Phi, simplify = F )
+  Phi <- start$Phi
   Lambda_s <- start$Lambda_s
   psi_s <- start$psi_s
-  beta <- replicate( S, start$beta, simplify = F )
+  beta <- start$beta
 
   
   # get some basic variables needed for computation
   j_s <- n_s <- numeric(S)
-  p <- dim(Phi[[1]])[1]
-  k <- dim(Phi[[1]])[2]
-  p_b <- dim(beta[[1]])[2]
+  p <- dim(Phi)[1]
+  k <- dim(Phi)[2]
+  p_b <- dim(beta)[2]
   B <- do.call( rbind, B_s )
 
   second_part <- solve(t(B) %*% B)
-  theta <- .param2vect(start, constraint)
+  theta <- .param2vect(start, constraint = "loswer_block2")
 
   #######defining objects
   Psi_s1 <- Psi_s <- cov_s <- list()
