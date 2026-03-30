@@ -124,6 +124,8 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   l_stop0 <- 0
   lm1 <- 0
   l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+
+  l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
   for (i in (1:nIt)) {
     if (i%%100 == 0){print(i)}
     ###########CM1 ---------------------------------------------------------------------------------------
@@ -248,10 +250,14 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     a <- (l1 - l0)/ (l0-lm1)
     l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
     
-    l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+    # save stopping values for debugging
+    # df <-  data.frame(lm1 = lm1, l0 = l0, l1 = l1, a = a, l_stop = l_stop)
+    # l.df <- dplyr::bind_rows(l.df, df)
+
+    # l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s) # seemed odd 
     if((trace) & (i %% 1000 == 0))  cat("i=", i, "Criterion for convergence ", abs(l_stop-l_stop0),  "\n")
     if((abs(l_stop-l_stop0)<tol) & i > 1 & l_stop != Inf) break
-    
+
     # assign vars for new cycle
     Psi_s <- Psi_new
     Phi <- Phi_new
@@ -275,5 +281,6 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, psi_s = psi_s, loglik = l1,
               AIC = AIC, BIC = BIC, npar=npar,
               iter = i,  cov_s = cov_s,  n_s = n_s, constraint=constraint)
+  # write.csv2(l.df, "likelihoods_no253.csv")
   return(res)
 }
