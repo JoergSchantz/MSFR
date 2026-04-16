@@ -115,9 +115,9 @@
 
 #' @keywords internal
 .exp_values <- function(
-  Phi, 
-  Lambda_s, 
-  Psi_s,  
+  Phi, # matrix
+  Lambda_s, # list pf matrices
+  Psi_s,  # list of matrices
   CM_step = 1, # out of (1,2,3,4)
   cov_s = NULL, # not needed for cm_step == 4
   X_s_tilde = NULL # only needed for cm_step == 4
