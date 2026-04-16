@@ -35,6 +35,43 @@
   ) 
 }
 
+#'@keyword internal
+.update_Psi <- function(cov, Phi, Lambda, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl) {
+  A <- cov + 
+    Phi %*% tcrossprod( exp_ff, Phi ) + 
+    Lambda %*% tcrossprod( exp_ll, Lambda ) - 
+    2 * tcrossprod( exp_xf, Phi ) -  
+    2 * tcrossprod( exp_xl, Lambda ) +
+    2 * Phi %*% tcrossprod( exp_fl, Lambda )
+  
+  diag(diag(A))
+}
+
+#### needs alot of work here ... might ask alejandra about that
+#'@keywkord internal
+.update_Phi <- function( n, Psi_new1, Lambda, exp_xf, exp_fl, exp_ff ) {
+  nPsi1 <- n * Psi_new1
+  C_s <- nPsi1 %*% (exp_xf - tcrossprod( Lambda, exp_fl ) )
+  kron_s <- kronecker(t(exp_ff), nPsi1)
+  C <- Reduce('+', C_s)
+  kron <- Reduce('+', kron_s)
+  Phi_vec <- solve(kron) %*% matrix(as.vector(C))
+  Phi_new <- matrix(Phi_vec, p, k)
+}
+
+#'@keyword internal
+.update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j ) {
+  A <- Phi %*% exp_fl
+  B <- exp_xl - A
+  C <- solve( exp_ll )
+  D <- B %*% C
+  matrix( D, p, j )
+}
+
+#'@keyword internal
+.update_Beta <- function( ) {
+  
+}
 
 #' Estimates the parameters of a MSFA model
 #'
@@ -125,7 +162,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   lm1 <- 0
   l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
 
-  l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
+  # l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
   for (i in (1:nIt)) {
     if (i%%100 == 0){print(i)}
     ###########CM1 ---------------------------------------------------------------------------------------
@@ -133,53 +170,51 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     ###### expected values
     out <- .exp_values( Phi, Lambda_s, Psi_s, CM_step = 1, cov_s = cov_s )
     exp_xl <- out$exp_xl; exp_xf <- out$exp_xf; exp_ll <- out$exp_ll; exp_ff <- out$exp_ff; exp_fl <- out$exp_fl
+    
     ###### update  of Psi_s
-    Psi_new <- list()
-    Psi_new1 <- list()
-    psi_new <- list()
+    Psi_new <- Map( .update_Psi, cov, list(Phi), Lambda, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl )
+    Psi_new1 <- Map( .inv_Psi, Psi_new )
 
-
-    for(s in 1:S){
-   	  psi_new[[s]]  <- diag(cov_s[[s]] + Phi %*% exp_ff[[s]] %*% t(Phi) + Lambda_s[[s]] %*%
-   	                   exp_ll[[s]] %*% t(Lambda_s[[s]]) - 2*exp_xf[[s]] %*% t(Phi) -  2*exp_xl[[s]] %*% t(Lambda_s[[s]]) +
-   	                   2 * Phi %*% exp_fl[[s]] %*% t(Lambda_s[[s]]))
-   	  Psi_new[[s]] <- diag(psi_new[[s]])
-   	  ##########inverse
-   	  Psi_new1[[s]] <- diag(1/diag(Psi_new[[s]]))
-   	}
 
     ###########CM2 ---------------------------------------------------------------------------------------
 
     ######expected values
-    out <- .exp_values(Phi, Lambda_s, Psi_new, CM_step = 2, cov_s = cov_s )
-    exp_xl <- out$exp_xl; exp_xf <- out$exp_xf; exp_ll <- out$exp_ll;
-    exp_ff <- out$exp_ff; exp_fl <- out$exp_fl
+    out <- .exp_values( Phi, Lambda_s, Psi_new, CM_step = 2, cov_s = cov_s )
+    exp_xf <- out$exp_xf; exp_ff <- out$exp_ff; exp_fl <- out$exp_fl
 
     ######update of Phi
-    C_s <- list()
-    kron_s <- list()
-    for(s in 1:S){
-      C_s[[s]] <- n_s[s] * Psi_new1[[s]] %*% exp_xf[[s]] - n_s[s] * Psi_new1[[s]] %*% Lambda_s[[s]] %*% t(exp_fl[[s]])
-      kron_s[[s]] <- kronecker(t(exp_ff[[s]]), n_s[s] * Psi_new1[[s]])
-    }
-    C <- Reduce('+', C_s)
-    kron <- Reduce('+', kron_s)
-    Phi_vec <- solve(kron) %*% matrix(as.vector(C))
-    Phi_new <- matrix(Phi_vec, p, k)
+    nPsi1 <- Map( "*", n_s, Psi_new1 )
+    C_s <- Map( 
+      function( nPsi1, Lambda, exp_xf, exp_fl ) nPsi1 %*% ( exp_xf - tcrossprod( Lambda, exp_fl ) ),
+      nPsi1, Lambda_s, exp_xf, exp_fl
+    )
+    kron_s <- Map(
+      function( nPsi1, exp_ff ) kronecker( t(exp_ff), nPsi1 ),
+      nPsi1, exp_ff
+    )
+    C <- Reduce( '+', C_s )
+    kron <- Reduce( '+', kron_s )
+    Phi_vec <- solve( kron ) %*% matrix( as.vector( C ) )
+    Phi_new <- matrix( Phi_vec, p, k )
 
 
     ########CM3 ---------------------------------------------------------------------------------------
 
     ######expected values
     out <- .exp_values( Phi_new, Lambda_s, Psi_new, CM_step = 3, cov_s = cov_s )
-    exp_xl <- out$exp_xl; exp_xf <- out$exp_xf; exp_ll <- out$exp_ll;
-    exp_ff <-  out$exp_ff; exp_fl <- out$exp_fl
+    exp_xl <- out$exp_xl
+    exp_ll <- out$exp_ll 
+    exp_fl <- out$exp_fl
 
     ######update of Lambda
-    Lambda_new <- list()
-    for(s in 1:S){
-      Lambda_new[[s]] <- matrix(((exp_xl[[s]] - Phi_new %*% exp_fl[[s]]) %*% solve(exp_ll[[s]])), p, j_s[s])
-    }
+    Lambda_new <- Map(
+      .update_Lambda,
+      list( Phi_new ),
+      exp_xl, 
+      exp_fl, 
+      exp_ll, 
+      j_s
+    )
 
     ########CM4: new part for beta---------------------------------------------------------------------------------------
    
