@@ -128,10 +128,16 @@
   I_j <- lapply( Lambda_s, function( s ) diag( 1, dim( s )[2] ) )
 
   inv_Psi_s <- lapply( Psi_s, .inv_Psi )
+
+  L_t <- lapply(Lambda_s, t)
+  P_t <- t(Phi)
   
+  # W_f <- Map( WoodburyMatrix::WoodburyMatrix, A = Psi_s, B = I_j, U = Lambda_s, V = L_t )
+  # W_l <- Map( WoodburyMatrix::WoodburyMatrix, A = Psi_s, B = list(I_k), U = list(Phi), V = list(P_t) )
+
   wb_f <- Map( .wb_identity2, inv_Psi_s, Lambda_s, I_j )
   wb_l <- Map( .wb_identity2, inv_Psi_s, list(Phi), list(I_k) )
-  
+
   delta_Phi <- Map( .wb_identity, list(Phi), wb_f, list(I_k) )
   delta_Lambda <-  Map( .wb_identity, Lambda_s, wb_l, I_j )
 

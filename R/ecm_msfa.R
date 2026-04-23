@@ -11,28 +11,20 @@
 #' until I figure out how to retrieve it from the Woodbury Identity
 .inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
   k <- dim( Phi )[2]
-  S <- length( Lambda_s )
-  j_s <-  sapply( Lambda_s, function( l ) dim( l )[2] )
-  I_tot <- lapply( k + j_s, diag, x = 1 )
-  LambTOT <-  lapply( Lambda_s, cbind, Phi )
-  list_of_args <- .make_args( list( Psi_s1, I_tot, LambTOT ) )
+  j_s <- dim( Lambda_s )[2]
+  I_tot <- diag( 1, k + j_s )
+  LambTOT <-  cbind( Lambda_s, Phi )
 
-  lapply(
-    list_of_args,
-    do.call, 
-    what = function( ps1, i_tot, lamtot ) {
-      ps1 - (
-        statmod::vecmat( diag( ps1 ), lamtot ) %*%
-          solve(
-            i_tot + (
-              t( lamtot ) %*% 
-                statmod::vecmat( diag( ps1 ), lamtot )
-              )
-          ) %*% 
-        statmod::matvec( t( lamtot ), diag( ps1 ) )
-      )             
-    }
-  ) 
+  Psi_s1 - (
+    statmod::vecmat( diag( Psi_s1 ), LambTOT ) %*%
+      solve(
+        I_tot + (
+          t( LambTOT ) %*% 
+            statmod::vecmat( diag( Psi_s1 ), LambTOT )
+          )
+      ) %*% 
+    statmod::matvec( t( LambTOT ), diag( Psi_s1 ) )
+  )
 }
 
 #'@keyword internal
@@ -47,30 +39,29 @@
   diag(diag(A))
 }
 
-#### needs alot of work here ... might ask alejandra about that
-#'@keywkord internal
-.update_Phi <- function( n, Psi_new1, Lambda, exp_xf, exp_fl, exp_ff ) {
-  nPsi1 <- n * Psi_new1
-  C_s <- nPsi1 %*% (exp_xf - tcrossprod( Lambda, exp_fl ) )
-  kron_s <- kronecker(t(exp_ff), nPsi1)
-  C <- Reduce('+', C_s)
-  kron <- Reduce('+', kron_s)
-  Phi_vec <- solve(kron) %*% matrix(as.vector(C))
-  Phi_new <- matrix(Phi_vec, p, k)
-}
-
 #'@keyword internal
 .update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j ) {
-  A <- Phi %*% exp_fl
-  B <- exp_xl - A
-  C <- solve( exp_ll )
-  D <- B %*% C
-  matrix( D, p, j )
+  A_ <- Phi %*% exp_fl
+  B_ <- exp_xl - A_
+  C_ <- solve( exp_ll )
+  D_ <- B_ %*% C_
+
+  return( matrix( D_, p, j ) )
 }
 
 #'@keyword internal
-.update_Beta <- function( ) {
-  
+.update_first_beta_part <- function( X_og, Phi, Lambda, exp_f, exp_l, B_s ) {
+  X_og_t <-  t( X_og )
+  A_ <- Phi %*% exp_f
+  C_ <- Lambda %*% exp_l
+  D_ <- X_og_t - A_ - C_
+
+  return( D_ %*% B_s ) 
+}
+
+#' @keywords internal
+.change_X <- function( X_og, B_s, beta ) {
+  X_og - tcrossprod( B_s, beta )
 }
 
 #' Estimates the parameters of a MSFA model
@@ -135,7 +126,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   p_b <- dim(beta)[2]
   B <- do.call( rbind, B_s )
 
-  second_part <- solve(t(B) %*% B)
+  second_part <- solve(crossprod(B))
   theta <- .param2vect(start, constraint)
 
   #######defining objects
@@ -156,33 +147,31 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   }
   ######E-step
   Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
-  Sig_s1 <- .inv_Sig( Psi_s1, Lambda_s, Phi )
+  Sig_s1 <- Map( .inv_Sig, Psi_s1, Lambda_s, list(Phi) )
   ds_s <- lapply( Sig_s, det )
   l_stop0 <- 0
   lm1 <- 0
   l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
 
   # l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
+  # Algorithm loop ----
   for (i in (1:nIt)) {
     if (i%%100 == 0){print(i)}
-    ###########CM1 ---------------------------------------------------------------------------------------
-
-    ###### expected values
+    ## CM1 ----
+    ### expected values ----
     out <- .exp_values( Phi, Lambda_s, Psi_s, CM_step = 1, cov_s = cov_s )
     exp_xl <- out$exp_xl; exp_xf <- out$exp_xf; exp_ll <- out$exp_ll; exp_ff <- out$exp_ff; exp_fl <- out$exp_fl
     
-    ###### update  of Psi_s
-    Psi_new <- Map( .update_Psi, cov, list(Phi), Lambda, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl )
+    ### update  of Psi_s ----
+    Psi_new <- Map( .update_Psi, cov_s, list(Phi), Lambda_s, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl )
     Psi_new1 <- Map( .inv_Psi, Psi_new )
 
-
-    ###########CM2 ---------------------------------------------------------------------------------------
-
-    ######expected values
+    ## CM2 ----
+    ### expected values ----
     out <- .exp_values( Phi, Lambda_s, Psi_new, CM_step = 2, cov_s = cov_s )
     exp_xf <- out$exp_xf; exp_ff <- out$exp_ff; exp_fl <- out$exp_fl
 
-    ######update of Phi
+    ### update of Phi ----
     nPsi1 <- Map( "*", n_s, Psi_new1 )
     C_s <- Map( 
       function( nPsi1, Lambda, exp_xf, exp_fl ) nPsi1 %*% ( exp_xf - tcrossprod( Lambda, exp_fl ) ),
@@ -197,16 +186,14 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     Phi_vec <- solve( kron ) %*% matrix( as.vector( C ) )
     Phi_new <- matrix( Phi_vec, p, k )
 
-
-    ########CM3 ---------------------------------------------------------------------------------------
-
-    ######expected values
+    ## CM3 ----
+    ### expected values ----
     out <- .exp_values( Phi_new, Lambda_s, Psi_new, CM_step = 3, cov_s = cov_s )
     exp_xl <- out$exp_xl
     exp_ll <- out$exp_ll 
     exp_fl <- out$exp_fl
 
-    ######update of Lambda
+    ### update of Lambda ----
     Lambda_new <- Map(
       .update_Lambda,
       list( Phi_new ),
@@ -216,27 +203,34 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
       j_s
     )
 
-    ########CM4: new part for beta---------------------------------------------------------------------------------------
+    ## CM4 ----
+    ### expected values ----
+    out <- .exp_values( Phi_new, Lambda_new, Psi_new, CM_step = 4, X_s_tilde = X_s )
+    exp_f <- out$exp_f; exp_l <- out$exp_l
    
-    ######expected values
-    out <-  .exp_values( Phi_new, Lambda_new, Psi_new, CM_step = 4, X_s_tilde = X_s )
-    exp_xl <- out$exp_xl; exp_xf <- out$exp_xf; exp_ll <- out$exp_ll;
-    exp_ff <-  out$exp_ff; exp_fl <- out$exp_fl; exp_f <- out$exp_f; exp_l <- out$exp_l
-   
-    ######update of beta
-    first_part_s <- list()
-    for (s in 1:S){
-     first_part_s[[s]] <- (t(X_s_original[[s]]) - Phi_new %*%  exp_f[[s]] - Lambda_new[[s]] %*% exp_l[[s]]) %*% B_s[[s]]		
-    }
+    ### update of beta ----
+    first_part_s <- Map(
+      .update_first_beta_part,
+      X_s_original,
+      list(Phi_new),
+      Lambda_new,
+      exp_f,
+      exp_l,
+      B_s
+    )
    
     first_part <- Reduce('+', first_part_s)
-    beta_new = first_part %*% second_part
+    beta_new <- first_part %*% second_part
    
-    #Changing Xs
-    X_s <- list()
-    for(s in 1:S) X_s[[s]] <- X_s_original[[s]] - B_s[[s]]%*%t(beta_new)
+    ### Changing Xs ----
+    X_s <- Map(
+      .change_X,
+      X_s_original,
+      B_s,
+      list(beta_new)
+    )
 	  
-    ###### constraint ---------------------------------------------------------------------------------------------------
+    ## constraint ----
     lambda_vals <- c()
     psi_vals <- psi_new <- c()
     Phi_new[upper.tri(Phi_new)] <- 0
@@ -276,9 +270,9 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     if(sh==20) stop("The full rank condition does not hold\n")
 
 
-    ###### stopping rule -------------------------------------------------------------------------------------------
+    ## stopping rule ----
     Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
-    Sig_s1 <- .inv_Sig( Psi_new1,Lambda_new, Phi_new ) 
+    Sig_s1 <- Map( .inv_Sig, Psi_new1, Lambda_new, list(Phi_new) ) 
     ds_s <- lapply( Sig_s, det )
 
     l1 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
@@ -304,7 +298,8 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     l0 <- l1
     l_stop0 <- l_stop
   }
-  #####AIC and BIC computation
+  
+  # AIC and BIC computation ----
 
   if (constraint == "block_lower1") npar <- p * S + k * (p - ( k - 1) / 2) +  sum(j_s * (p - k - (j_s - 1) / 2))
   if (constraint == "block_lower2")  npar <- p * S + k * (p - ( k - 1) / 2) +  sum(j_s * (p  - (j_s - 1) / 2))
@@ -312,7 +307,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   AIC <- -2 * l1 + npar * 2
   BIC <- -2 * l1 + npar * log(n_tot)
 
-  ############return output
+  # return output ----
   res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, psi_s = psi_s, loglik = l1,
               AIC = AIC, BIC = BIC, npar=npar,
               iter = i,  cov_s = cov_s,  n_s = n_s, constraint=constraint)
