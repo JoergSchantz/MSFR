@@ -142,7 +142,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   	n_s[s] <-  dim(X_s[[s]])[[1]]
   	j_s[s] <-  dim(Lambda_s[[s]])[[2]]
   	Psi_s[[s]] <- diag(psi_s[[s]])
-    Psi_s1[[s]] <-  diag(1/psi_s[[s]])
+    Psi_s1[[s]] <- diag(1/psi_s[[s]])
     cov_s[[s]] <- cov(X_s[[s]])
   }
   ######E-step
@@ -275,7 +275,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     Sig_s1 <- Map( .inv_Sig, Psi_new1, Lambda_new, list(Phi_new) ) 
     ds_s <- lapply( Sig_s, det )
 
-    l1 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+    l1 <- .loglik_ecm(Sig_s1, ds_s, n_s, cov_s)
     a <- (l1 - l0)/ (l0-lm1)
     l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
     
