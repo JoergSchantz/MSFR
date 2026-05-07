@@ -101,16 +101,21 @@
 #' Implementation of Woodbury Identity. This will most likely only work 
 #' inside this package and is not meant to be used outside of it.
 #' @references O. Morgenstern and M. A. Woodbury, “Stability of Inverses of Input-Output Matrices,” Econometrica 18 (1950): 190.
-.wb_identity <- function( A, W, I) {
+.wb_identity <- function( A, W, I ) {
   # A: being either Lambda_s[[s]] or Phi matrix
   # I: Study (un-)specific Identity matrix
-  cp <- crossprod( A, W )               # to save computation time
-  solve( I + cp %*% A ) %*% cp
+  cp <- crossprod( A, W )    # to save computation time
+  t1 <- cp %*% A
+  inv_t <- solve( I + t1 )
+  inv_t %*% cp
 }
 #' @keywords internal
 #' 2nd application of the Woodbury Identity
-.wb_identity2 <- function( inv_Psi, A, I ){
-  inv_Psi - inv_Psi %*% A %*% .wb_identity( A, inv_Psi, I )
+.wb_identity2 <- function( W, A, I ){
+  wb <- .wb_identity( A, W, I )
+  t1 <- W %*% A
+  t2 <- t1 %*% wb
+  W - t2
 }
 
 #' @keywords internal

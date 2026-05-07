@@ -178,7 +178,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
       nPsi1, Lambda_s, exp_xf, exp_fl
     )
     kron_s <- Map(
-      function( nPsi1, exp_ff ) kronecker( t(exp_ff), nPsi1 ),
+      function( nPsi1, exp_ff ) kronecker( WoodburyMatrix::t(exp_ff), nPsi1 ),
       nPsi1, exp_ff
     )
     C <- Reduce( '+', C_s )
