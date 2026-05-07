@@ -123,7 +123,7 @@
   X_s_tilde = NULL # only needed for cm_step == 4
 )
 {
-  k <- dim( Phi )[2]
+  k <- ncol(Phi)
   I_k <- diag( 1, k )
   I_j <- lapply( Lambda_s, function( s ) diag( 1, dim( s )[2] ) )
 
@@ -135,27 +135,36 @@
   delta_Phi <- Map( .wb_identity, list(Phi), wb_f, list(I_k) )
   delta_Lambda <-  Map( .wb_identity, Lambda_s, wb_l, I_j )
 
-  if ( CM_step == 1 ) {
-    return(
-      .step_cm_1( Phi, Lambda_s, delta_Phi, delta_Lambda, cov_s, I_k, I_j )
-    )
+  if (CM_step == 1) {
+    return(list(
+      exp_xl = Map( .get_exp_xl, delta_Lambda, cov_s ),
+      exp_xf = Map( .get_exp_xf, delta_Phi, cov_s ),
+      exp_ll = Map( .get_exp_ll, Lambda_s, delta_Lambda, cov_s, I_j ),
+      exp_ff = Map( .get_exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) ),
+      exp_fl = Map( .get_exp_fl, Lambda_s, delta_Phi, delta_Lambda, cov_s )
+    ))
   }
 
-  if ( CM_step == 2 ) {
-    return(
-      .step_cm_2( Phi, Lambda_s, delta_Phi, delta_Lambda, cov_s, I_k )
-    )
+  if (CM_step == 2) {
+    return(list(
+      exp_xf = Map( .get_exp_xf, delta_Phi, cov_s ),
+      exp_ff = Map( .get_exp_ff, list(Phi), delta_Phi, cov_s, list(I_k) ),
+      exp_fl = Map( .get_exp_fl, Lambda_s, delta_Phi, delta_Lambda, cov_s )
+    ))
   }
 
-  if ( CM_step == 3 ) {
-    return(
-      .step_cm_3( Lambda_s, delta_Phi, delta_Lambda, cov_s, I_j )
-    )
+  if (CM_step == 3) {
+    return(list(
+      exp_xl = Map( .get_exp_xl, delta_Lambda, cov_s ),
+      exp_ll = Map( .get_exp_ll, Lambda_s, delta_Lambda, cov_s, I_j ),
+      exp_fl = Map( .get_exp_fl, Lambda_s, delta_Phi, delta_Lambda, cov_s )
+    ))
   }
 
-  if ( CM_step == 4 ) {
-    return( 
-      .step_cm_4( delta_Phi, delta_Lambda, X_s_tilde )
-    )
+  if (CM_step == 4) {
+    return(list(
+      exp_f = Map( .get_exp_f, delta_Phi, X_s_tilde ),
+      exp_l = Map( .get_exp_l, delta_Lambda, X_s_tilde )
+    ))
   }
 }
