@@ -12,19 +12,14 @@
 .inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
   k <- dim( Phi )[2]
   j_s <- dim( Lambda_s )[2]
-  I_tot <- diag( 1, k + j_s )
-  LambTOT <-  cbind( Lambda_s, Phi )
 
-  Psi_s1 - (
-    statmod::vecmat( diag( Psi_s1 ), LambTOT ) %*%
-      solve(
-        I_tot + (
-          t( LambTOT ) %*% 
-            statmod::vecmat( diag( Psi_s1 ), LambTOT )
-          )
-      ) %*% 
-    statmod::matvec( t( LambTOT ), diag( Psi_s1 ) )
-  )
+  LambTOT <- cbind( Lambda_s, Phi )                    # build once
+  psi_vec <- diag( Psi_s1 )                            # extract once
+  PsiInv_U <- statmod::vecmat( psi_vec, LambTOT )      # compute once
+
+  inv <- solve( diag( 1, k + j_s ) + crossprod( LambTOT, PsiInv_U ) )
+
+  Psi_s1 - PsiInv_U %*% tcrossprod( inv, PsiInv_U )
 }
 
 #'@keyword internal
@@ -156,7 +151,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   # l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
   # Algorithm loop ----
   for (i in (1:nIt)) {
-    if (i%%100 == 0){print(i)}
+    if (i%%1000 == 0){print(i)}
     ## CM1 ----
     ### expected values ----
     out <- .exp_values( Phi, Lambda_s, Psi_s, CM_step = 1, cov_s = cov_s )
