@@ -41,7 +41,7 @@
   C_ <- solve( exp_ll )
   D_ <- B_ %*% C_
 
-  return( matrix( D_, p, j ) )
+  matrix( D_, p, j )
 }
 
 #'@keyword internal
@@ -51,7 +51,7 @@
   C_ <- Lambda %*% exp_l
   D_ <- X_og_t - A_ - C_
 
-  return( D_ %*% B_s ) 
+  D_ %*% B_s
 }
 
 #' @keywords internal
