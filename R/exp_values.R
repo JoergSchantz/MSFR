@@ -123,7 +123,7 @@
   X_s_tilde = NULL # only needed for cm_step == 4
 )
 {
-  k <- ncol(Phi)
+  k <- dim( Phi )[2]
   I_k <- diag( 1, k )
   I_j <- lapply( Lambda_s, function( s ) diag( 1, dim( s )[2] ) )
 
