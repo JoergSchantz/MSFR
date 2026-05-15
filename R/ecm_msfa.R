@@ -1,15 +1,15 @@
 #' @keywords internal
-#' simple generator for Sigma matrix 
 .build_Sig <-  function( Phi, Lambda_s, Psi_s ){
+  # simple generator for Sigma matrix 
   tcrossprod( Phi ) + tcrossprod( Lambda_s ) + Psi_s
 }
 
 #' @importFrom statmod vecmat 
 #' @importFrom statmod matvec
-#' @keyword internal
-#' Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
-#' until I figure out how to retrieve it from the Woodbury Identity
+#' @keywords internal
 .inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
+  # Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
+  # until I figure out how to retrieve it from the Woodbury Identity
   k <- dim( Phi )[2]
   j_s <- dim( Lambda_s )[2]
 
@@ -22,7 +22,7 @@
   Psi_s1 - PsiInv_U %*% tcrossprod( inv, PsiInv_U )
 }
 
-#'@keyword internal
+#'@keywords internal
 .update_Psi <- function(cov, Phi, Lambda, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl) {
   A <- cov + 
     Phi %*% tcrossprod( exp_ff, Phi ) + 
@@ -34,7 +34,7 @@
   diag(diag(A))
 }
 
-#'@keyword internal
+#'@keywords internal
 .update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j ) {
   A_ <- Phi %*% exp_fl
   B_ <- exp_xl - A_
@@ -44,7 +44,7 @@
   matrix( D_, p, j )
 }
 
-#'@keyword internal
+#'@keywords internal
 .update_first_beta_part <- function( X_og, Phi, Lambda, exp_f, exp_l, B_s ) {
   X_og_t <-  t( X_og )
   A_ <- Phi %*% exp_f
