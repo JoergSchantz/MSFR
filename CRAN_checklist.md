@@ -1,0 +1,29 @@
+- [x] Install XCode (on MacOS) or Rtools (on Windows)
+- [x] Install Git
+- [x] Install the devtools package
+- [x] Check if your package name is available with `pak::pkg_name_check('your_package_name')`
+- [x] Create your package with `usethis::create_package('path/package_name')` (but be deliberate about where you create it!)
+- [x] Make your package a Git repository using `usethis::use_git()`
+- [x] Put the package on GitHub as a remote repository using `usethis::use_github()`
+- [x] Create your first R script via `usethis::use_r('my_function')`
+- [ ] Add object documentation using roxygen comments
+- [ ] Run `devtools::document()` to render your documentation
+- [ ] Create associated unit tests for your functions: with your R script open, use `usethis::use_test()`
+- [ ] Check for test coverage: run `devtools::test_coverage_active_file()` in the active file, or `devtools::test_coverage()` for the whole package
+- [x] Add a license with `usethis::use_mit_license()`
+- [x] Update the DESCRIPTION file: edit the title, include author(s), write a one-paragraph description
+- [x] Add a package-level help page with `usethis::use_package_doc()`
+- [ ] Run `devtools::check()` from time to time
+- [ ] Document your package dependencies with either `usethis::use_package('package_name', min_version = TRUE)` or `usethis::use_import_from('package_name', 'function_name')`
+- [ ] Include a Citation File with `cffr::cff_write()`
+- [ ] Add a README file with `usethis::use_readme_rmd()`
+- [ ] Edit the README, and render the .Rmd file with `devtools::build_readme()`
+- [ ] Add the R CMD check GitHub action with `usethis::use_github_action('check-standard')`
+- [ ] Add a vignette, such as `usethis::use_vignette('package_pal')`. Edit the .Rmd file, then preview using `devtools::build_rmd('vignettes/package_pal.Rmd')`
+- [ ] Configure your package for pkgdown with `usethis::use_pkgdown()`
+- [ ] Build the website locally with `pkgdown::build_site()`
+- [ ] Build and host the website on GitHub with `usethis::use_pkgdown_github_pages()`
+- [ ] Add the workflow for the test coverage GitHub Action using `usethis::use_github_action('test-coverage')`
+- [ ] Add the test coverage badge to your README with `usethis::use_github_actions_badge('test-coverage')`
+- [ ] Add a News page using `usethis::use_news_md()`
+- [ ] Don't forget to regularly commit your changes and push them to GitHub: `git add .`, `git commit -m 'commit message'`, and `git push`
