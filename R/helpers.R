@@ -245,40 +245,63 @@
 #' @keywords internal
 #### loglikelihood function re-expressed as a function of the model parameters
 #### theta: c(Phi, Lambda_1,..,Lambda_S,Psi_1,..,Psi_S)
-.loglik_int <- function(theta, n_s, cov_s, k, j_s, constraint)
-{
-  S <- length(n_s)
-  p <- ncol(cov_s[[1]])
-  nP <- k * p - k * ( k - 1) / 2
-  if (constraint == "block_lower1")  { nL <- j_s * (p - k)  - j_s *  (j_s - 1) / 2}
-  if (constraint == "block_lower2")  { nL <- j_s * p  - j_s *  (j_s - 1) / 2}
+.loglik_int <- function(theta, n_s, cov_s, k, j_s, constraint) {
+ 
+  S  <- length(n_s)
+  p  <- ncol(cov_s[[1]])
+  nP <- k * p - k * (k - 1) / 2
+ 
+  if (constraint == "block_lower1") nL <- j_s * (p - k) - j_s * (j_s - 1) / 2
+  if (constraint == "block_lower2") nL <- j_s * p - j_s * (j_s - 1) / 2
+ 
   phi_vals <- theta[1:nP]
   Phi <- matrix(0, p, k)
   Phi[lower.tri(Phi, diag = TRUE)] <- phi_vals
-  out <- 0
-  for(s in 1:S){
-    nL_s  <- if(s==1) 0 else sum(nL[1:(s-1)])
-    ind <-  (nP + nL_s + 1):(nP + nL_s + nL[s])
-    omega_vals_s <- c(phi_vals, theta[ind])
+ 
+  ## index bookkeeping done once, not inside the loop (was O(S^2), now O(S))
+  nL_cum   <- cumsum(c(0, nL))     # nL_cum[s] = offset before group s
+  totalL   <- nL_cum[S + 1]
+  psi_base <- nP + totalL
+ 
+  group_contrib <- function(s) {
+ 
+    ind   <- (nP + nL_cum[s] + 1):(nP + nL_cum[s] + nL[s])
+    ind_s <- (psi_base + p * (s - 1) + 1):(psi_base + p * s)
     Omega_s <- matrix(0, p, k + j_s[s])
-    if (constraint == "block_lower1")  Omega_s[lower.tri(Omega_s, diag = TRUE)] <- omega_vals_s
-    if (constraint == "block_lower2")
-    {
+ 
+    if (constraint == "block_lower1") {
+      omega_vals_s <- c(phi_vals, theta[ind])
+      Omega_s[lower.tri(Omega_s, diag = TRUE)] <- omega_vals_s
+    }
+    if (constraint == "block_lower2") { 
       Lambda_s <- matrix(0, p, j_s[s])
       Lambda_s[lower.tri(Lambda_s, diag = TRUE)] <- theta[ind]
       Omega_s <- cbind(Phi, Lambda_s)
     }
-    ind_s <- (nP + sum(nL) + p * (s-1) + 1):(nP + sum(nL) + p * s)
+ 
     psi_vals_s <- theta[ind_s]
-    Psi_s1 <- diag(1 / psi_vals_s)
-    D1L_s <- statmod::vecmat(1 / sqrt(psi_vals_s), Omega_s)
-    LDL_s <- crossprod(D1L_s)
-    A <- diag(k + j_s[s]) + LDL_s
-    A1 <- chol2inv(chol(A))
-    D2L_s <- statmod::vecmat(1/psi_vals_s, Omega_s)
-    Sig_s1 <- Psi_s1 - D2L_s  %*% A1 %*% t(D2L_s)
-    log_ds_s <-  log(det(A)) + sum(log(psi_vals_s))
-    out  <- out - (n_s[s]/2) * log_ds_s - (n_s[s]/2) * .tr(Sig_s1 %*% cov_s[[s]])
+    inv_psi_s  <- 1 / psi_vals_s
+
+    D1L_s <- Omega_s * sqrt(inv_psi_s)
+    D2L_s <- Omega_s * inv_psi_s
+ 
+    LDL_s <- crossprod(D1L_s)                # (k+j_s) x (k+j_s)
+    A     <- diag(k + j_s[s]) + LDL_s
+    cholA <- chol(A)
+    A1    <- chol2inv(cholA)
+ 
+    log_ds_s <- 2 * sum(log(diag(cholA))) + sum(log(psi_vals_s))
+ 
+    Cov_s <- cov_s[[s]]
+ 
+    ## Woodbury trace identity: never forms the dense p x p Sig_s1
+    trace_diag <- sum(inv_psi_s * diag(Cov_s))            # O(p)
+    M          <- crossprod(D2L_s, Cov_s %*% D2L_s)       # O(p^2 * (k+j_s))
+    trace_corr <- sum(A1 * M)                             # both symmetric
+    trace_term <- trace_diag - trace_corr
+ 
+    -(n_s[s] / 2) * log_ds_s - (n_s[s] / 2) * trace_term
   }
-  return(out)
+ 
+  sum(vapply(seq_len(S), group_contrib, numeric(1)))
 }
