@@ -141,12 +141,13 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     cov_s[[s]] <- cov(X_s[[s]])
   }
   ######E-step
-  Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
-  Sig_s1 <- Map( .inv_Sig, Psi_s1, Lambda_s, list(Phi) )
-  ds_s <- lapply( Sig_s, det )
+  # Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
+  # Sig_s1 <- Map( .inv_Sig, Psi_s1, Lambda_s, list(Phi) )
+  # ds_s <- lapply( Sig_s, det )
   l_stop0 <- 0
   lm1 <- 0
-  l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+  # l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
+  l0 <- .loglik_int(theta, n_s, cov_s, k , j_s, constraint)
 
   # l.df <- data.frame(lm1 = lm1, l0 = l0, l1 = 0, a = 0, l_stop = 0) # for testing l updates
   # Algorithm loop ----
@@ -239,7 +240,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     L_sTOT <- Reduce('cbind', Lambda_new)
     Omega <- cbind(Phi_new, L_sTOT)
     rank_tot <-  qr(Omega)$rank
-    theta_new <- c(phi_val, lambda_vals, psi_vals)
+    theta_new <- theta_test <- c(phi_val, lambda_vals, psi_vals)
     param.struct <- list(Phi = Phi_new, Lambda_s = Lambda_new, psi_s=psi_new)
     Delta <- theta_new - theta
     sh <- 0   ###no more than 20 step-halving rounds
@@ -247,7 +248,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
     while( (rank_tot < k + sum(j_s)) & (sh<20)) {
       Delta <- Delta / 2
       sh <- sh + 1
-      theta_new <- theta + Delta
+      theta_test <- theta + Delta
       param <- .vect2param(theta_new, param.struct, constraint, p, k, j_s)
       Lambda_new <- c()
       psi_new <- param$psi_new
@@ -266,11 +267,12 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
 
 
     ## stopping rule ----
-    Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
-    Sig_s1 <- Map( .inv_Sig, Psi_new1, Lambda_new, list(Phi_new) ) 
-    ds_s <- lapply( Sig_s, det )
+    # Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
+    # Sig_s1 <- Map( .inv_Sig, Psi_new1, Lambda_new, list(Phi_new) ) 
+    # ds_s <- lapply( Sig_s, det )
 
-    l1 <- .loglik_ecm(Sig_s1, ds_s, n_s, cov_s)
+    # l1 <- .loglik_ecm(Sig_s1, ds_s, n_s, cov_s)
+    l1 <- .loglik_int(theta_new, n_s, cov_s, k , j_s, constraint)
     a <- (l1 - l0)/ (l0-lm1)
     l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
     

@@ -120,15 +120,15 @@
 
 #' @keywords internal
 .exp_values <- function(
-  Phi, # matrix
-  Lambda_s, # list pf matrices
-  Psi_s,  # list of matrices
-  CM_step = 1, # out of (1,2,3,4)
-  cov_s = NULL, # not needed for cm_step == 4
-  X_s_tilde = NULL # only needed for cm_step == 4
+  Phi,              # matrix
+  Lambda_s,         # list of matrices
+  Psi_s,            # list of matrices
+  CM_step   = 1,    # out of (1,2,3,4)
+  cov_s     = NULL, # not needed for cm_step == 4
+  X_s_tilde = NULL  # only needed for cm_step == 4
 )
 {
-  k <- dim( Phi )[2]
+  k   <- dim( Phi )[2]
   I_k <- diag( 1, k )
   I_j <- lapply( Lambda_s, function( s ) diag( 1, dim( s )[2] ) )
 
@@ -137,8 +137,8 @@
   wb_f <- Map( .wb_identity2, inv_Psi_s, Lambda_s, I_j )
   wb_l <- Map( .wb_identity2, inv_Psi_s, list(Phi), list(I_k) )
 
-  delta_Phi <- Map( .wb_identity, list(Phi), wb_f, list(I_k) )
-  delta_Lambda <-  Map( .wb_identity, Lambda_s, wb_l, I_j )
+  delta_Phi    <- Map( .wb_identity, list(Phi), wb_f, list(I_k) )
+  delta_Lambda <- Map( .wb_identity, Lambda_s, wb_l, I_j )
 
   if (CM_step == 1) {
     return(list(

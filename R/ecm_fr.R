@@ -30,143 +30,202 @@
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' Multivariate Analysis, 84, 145-172.
-ecm_fr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, block_lower = TRUE, robust = FALSE, corr = TRUE, mcd = FALSE, trace = TRUE, traceIT = 1000)
+ecm_fr <- function( 
+  X_s,
+  B_s,
+  start,
+  nIt = 50000,
+  tol = 10 ^ -7,
+  block_lower = TRUE,
+  robust = FALSE,
+  corr = TRUE,
+  mcd = FALSE,
+  trace = TRUE
+  # ,traceIT = 1000 
+)
 {
   Psi_s <- psi_s <- list()
   #######
-  p <- ncol(X_s[[1]])
-  k <- dim(start$Phi)[[2]]
-  S <- length(X_s)
-  n_s <- numeric(S)
-  p_b <- dim(beta)[[2]]
+  p     <- ncol( X_s[[1]] )
+  k     <- dim( start$Phi )[[2]]
+  S     <- length( X_s )
+  n_s   <- numeric( S )
+  p_b   <- dim( beta )[[2]]
   #######defining objects
   Psi_s1 <- Psi_s <- cov_s <- list()
-  
-  tot_s = k
-  
-  Phi <- start$Phi
-  beta <- start$beta	
+
+  tot_s <- k
+
+  Phi   <- start$Phi
+  beta  <- start$beta
   psi_s <- start$psi_s
-  
-  B <- Reduce('rbind', B_s)
-  second_part <- solve(t(B) %*% B)
-  
+
+  B           <- Reduce( 'rbind', B_s )
+  second_part <- solve( crossprod( B ) )
+
   X_s_original <- X_s
   #Changing Xs for Xtilde
-  X_s <- list()
-  for(s in 1:S) X_s[[s]] <- X_s_original[[s]] - B_s[[s]]%*%t(beta)
-  
+  X_s          <- list()
+  for( s in 1:S ) X_s[[s]] <- X_s_original[[s]] - B_s[[s]] %*% t( beta )
+
   ######1st round of cycle
-  for(s in 1:S){
-    n_s[s] <-  dim(X_s[[s]])[[1]]
-    #j_s[s] <-  dim(Lambda_s[[s]])[[2]]
-    Psi_s[[s]] <- diag(psi_s[[s]])
-    Psi_s1[[s]] <-  diag(1/psi_s[[s]])
-    cov_s[[s]] <- cov(X_s[[s]])
-    #if((!robust) & (!corr)) cov_s[[s]] <- cov(X_s[[s]])
-    #if((!robust) & corr) cov_s[[s]] <- cor(X_s[[s]])
-    #if(robust & mcd) cov_s[[s]] <- covRob(X_s[[s]], estim = "mcd", quan = .75, ntrial = 1000, corr = corr)$cov
-    #if(robust & (!mcd)) cov_s[[s]] <- covRob(X_s[[s]], corr = corr)$cov
+  for( s in 1:S ) {
+    n_s[s]       <- dim( X_s[[s]] )[[1]]
+    Psi_s[[s]]   <- diag( psi_s[[s]] )
+    Psi_s1[[s]]  <- diag( 1 / psi_s[[s]] )
+    cov_s[[s]]   <- cov( X_s[[s]] )
   }
   ######E-step
-  out <- .exp_values_fr(Phi, Psi_s, Psi_s1, cov_s, X_s, getdet = TRUE)
-  Sig_s1 <- out$Sig_s1; ds_s= out$ds_s;
+  out    <- .exp_values_fr( 
+              Phi,
+              Psi_s,
+              Psi_s1,
+              cov_s,
+              X_s,
+              getdet = TRUE 
+            )
+  Sig_s1  <- out$Sig_s1
+  ds_s    <- out$ds_s
   l_stop0 <- 0
-  lm1 <- 0
-  l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
-  for (i in (1:nIt))
+  lm1     <- 0
+  l0      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
+  for( i in ( 1:nIt ) )
   {
-    if (i%%100 == 0){print(i)}
+    if( i %% 100 == 0 ) { print( i ) }
     ###########CM1 ---------------------------------------------------------------------------------------
-    
+
     ######expected values
-    out <- .exp_values_fr(Phi, Psi_s, Psi_s1, cov_s, X_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs; Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
+    out     <- .exp_values_fr( Phi,
+                                Psi_s,
+                                Psi_s1,
+                                cov_s,
+                                X_s )
+    Txsfs   <- out$Txsfs
+    Txsfcs  <- out$Txsfcs
+    Tfsfs   <- out$Tfsfs
+    Tfcsfcs <- out$Tfcsfcs
+    Tfcsfs  <- out$Tfcsfs
     ######update  of Phi_s
-    Psi_new <- list()
+    Psi_new  <- list()
     Psi_new1 <- list()
-    psi_new <- list()
-    
-    for(s in 1:S){
-      psi_new[[s]]  <- diag(cov_s[[s]] + Phi %*% Tfcsfcs[[s]] %*% t(Phi) - 2*Txsfcs[[s]] %*% t(Phi))
-      Psi_new[[s]] <- diag(psi_new[[s]])
+    psi_new  <- list()
+
+    for( s in 1:S ) {
+      term2         <- Phi %*% Tfcsfcs[[s]] %*% t( Phi )
+      term3         <- 2 * Txsfcs[[s]] %*% t( Phi )
+      psi_new[[s]]  <- cov_s[[s]] + term2 - term3
+      Psi_new[[s]]  <- diag( psi_new[[s]] )
       ##########inverse
-      Psi_new1[[s]] <- diag(1/diag(Psi_new[[s]]))
+      Psi_new1[[s]] <- diag( 1 / diag( Psi_new[[s]] ) )
     }
-    
+
     ###########CM2 ---------------------------------------------------------------------------------------
-    
+
     ######expected values
-    out<- .exp_values_fr(Phi, Psi_new, Psi_new1, cov_s, X_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
-    Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
-    
+    out     <- .exp_values_fr( Phi,
+                                Psi_new,
+                                Psi_new1,
+                                cov_s,
+                                X_s )
+    Txsfs   <- out$Txsfs
+    Txsfcs  <- out$Txsfcs
+    Tfsfs   <- out$Tfsfs
+    Tfcsfcs <- out$Tfcsfcs
+    Tfcsfs  <- out$Tfcsfs
+
     ########CM3 ---------------------------------------------------------------------------------------
-    
+
     ######expected values
     #out <- .exp_values(Phi, Omega_s, Psi_new, Psi_new1, cov_s)
     #Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
     #Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
-    
+
     ######update of Phi
-    C_s <- list()
+    C_s    <- list()
     kron_s <- list()
-    for(s in 1:S){
-      C_s[[s]] <- n_s[s] * Psi_new1[[s]] %*% Txsfcs[[s]] #- n_s[s] * Psi_new1[[s]] %*% Lambda_s[[s]] %*% t(Tfcsfs[[s]])
-      kron_s[[s]] <- kronecker(t(Tfcsfcs[[s]]), n_s[s] * Psi_new1[[s]])
+    for( s in 1:S ) {
+      C_s[[s]]    <- n_s[s] * Psi_new1[[s]] %*% Txsfcs[[s]] #- n_s[s] * Psi_new1[[s]] %*% Lambda_s[[s]] %*% t(Tfcsfs[[s]])
+      kron_s[[s]] <- kronecker( t( Tfcsfcs[[s]] ), n_s[s] * Psi_new1[[s]] )
     }
-    C <- Reduce('+', C_s)
-    kron <- Reduce('+', kron_s)
-    Phi_vec <- solve(kron) %*% matrix(as.vector(C))
-    Phi_new <- matrix(Phi_vec, p, k)
-    
+    C       <- Reduce( '+', C_s )
+    kron    <- Reduce( '+', kron_s )
+    Phi_vec <- solve( kron ) %*% matrix( as.vector( C ) )
+    Phi_new <- matrix( Phi_vec, p, k )
+
     ########CM4: new part for beta---------------------------------------------------------------------------------------
-    
+
     ######expected values
-    out <-  .exp_values_fr(Phi_new, Psi_new, Psi_new1, cov_s, X_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
-    Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs; E_fis_x_is <- out$E_fis_x_is; E_lis_x_is <- out$E_lis_x_is
-    
+    out        <- .exp_values_fr( Phi_new,
+                                   Psi_new,
+                                   Psi_new1,
+                                   cov_s,
+                                   X_s )
+    Txsfs      <- out$Txsfs
+    Txsfcs     <- out$Txsfcs
+    Tfsfs      <- out$Tfsfs
+    Tfcsfcs    <- out$Tfcsfcs
+    Tfcsfs     <- out$Tfcsfs
+    E_fis_x_is <- out$E_fis_x_is
+    E_lis_x_is <- out$E_lis_x_is
+
     ######update of beta
     first_part_s <- list()
-    for (s in 1:S){
-      first_part_s[[s]] <- (t(X_s_original[[s]]) - Phi_new %*%  E_fis_x_is[[s]] ) %*% B_s[[s]]		
+    for( s in 1:S ) {
+      cross_term        <- Phi_new %*% E_fis_x_is[[s]]
+      first_part_s[[s]] <- ( t( X_s_original[[s]] ) - cross_term ) %*% B_s[[s]]
     }
-    
-    first_part <- Reduce('+', first_part_s)
-    beta_new = first_part %*% second_part
-    
+
+    first_part <- Reduce( '+', first_part_s )
+    beta_new   <- first_part %*% second_part
+
     #Changing Xs
     X_s <- list()
-    for(s in 1:S) X_s[[s]] <- X_s_original[[s]] - B_s[[s]]%*%t(beta_new)
-    
+    for( s in 1:S ) X_s[[s]] <- X_s_original[[s]] - B_s[[s]] %*% t( beta_new )
+
     ###########stopping rule
-    out <- .exp_values_fr(Phi_new, Psi_new, Psi_new1, cov_s,X_s, getdet = TRUE)
-    
-    Sig_s1 <- out$Sig_s1
-    ds_s <- out$ds_s
-    l1 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
-    a <- (l1 - l0)/ (l0-lm1)
-    l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
-    l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
-    if((trace) & (i %% 100 == 0))  cat("i=", i, "Criterion for convergence ", abs(l_stop-l_stop0), "\n")
-    if( (abs(l_stop-l_stop0)<tol) & i > 1 & l_stop != Inf) break
-    Psi_s <- Psi_new
+    out <- .exp_values_fr( Phi_new,
+                            Psi_new,
+                            Psi_new1,
+                            cov_s,
+                            X_s,
+                            getdet = TRUE )
+
+    Sig_s1  <- out$Sig_s1
+    ds_s    <- out$ds_s
+    l1      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
+    a       <- ( l1 - l0 ) / ( l0 - lm1 )
+    l_stop  <- lm1 + ( 1 / ( 1 - a ) ) * ( l0 - lm1 )
+    l0      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
+    if( ( trace ) & ( i %% 100 == 0 ) ) {
+      cat( "i=",
+           i,
+           "Criterion for convergence ",
+           abs( l_stop - l_stop0 ),
+           "\n" )
+    }
+    if( ( abs( l_stop - l_stop0 ) < tol ) & i > 1 & l_stop != Inf ) break
+    Psi_s   <- Psi_new
     #Omega_s <- Omega_new
-    Phi_s <- Phi_new
-    Beta_s <- beta_new
-    Psi_s1 <- Psi_new1
-    lm1 <- l0
-    l0 <- l1
+    Phi_s   <- Phi_new
+    Beta_s  <- beta_new
+    Psi_s1  <- Psi_new1
+    lm1     <- l0
+    l0      <- l1
     l_stop0 <- l_stop
   }
   ############return output
-  for(s in 1:S) psi_s[[s]] <- diag(Psi_s[[s]])
-  npar <- p * S + sum(tot_s * (p - (tot_s - 1) / 2))
-  n_tot <- sum(n_s)
-  AIC <- -2 * l1 + npar * 2
-  BIC <- -2 * l1 + npar * log(n_tot)
-  res <- list(Phi = Phi_s, psi_s = psi_s, beta=Beta_s, loglik = l1, AIC = AIC,
-              BIC = BIC, npar=npar, iter = i)
-  return(res)
+  for( s in 1:S ) psi_s[[s]] <- diag( Psi_s[[s]] )
+  npar  <- p * S + sum( tot_s * ( p - ( tot_s - 1 ) / 2 ) )
+  n_tot <- sum( n_s )
+  AIC   <- -2 * l1 + npar * 2
+  BIC   <- -2 * l1 + npar * log( n_tot )
+  res   <- list( Phi = Phi_s,
+                 psi_s = psi_s,
+                 beta = Beta_s,
+                 loglik = l1,
+                 AIC = AIC,
+                 BIC = BIC,
+                 npar = npar,
+                 iter = i )
+  return( res )
 }
