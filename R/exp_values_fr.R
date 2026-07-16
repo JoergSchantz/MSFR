@@ -1,165 +1,96 @@
 ## =============================================================================
-## .exp_values_fr()  --  EM-hot-loop optimized version
+## .exp_values_fr()  --  E-step for the factor-regression module (ecm_fr())
 ##
-## This assumes the earlier Woodbury refactor is correct and asks: given this
-## function now runs once per EM iteration (possibly thousands of times over
-## a run, S times each), what's left on the table?
+## FR has a single shared common factor and no per-study loadings:
+## x_is = beta b_is + Phi f_is + e_is, e_is ~ N(0, Psi_s), f_is ~ N(0, I).
+## (x_is here is already the covariate-adjusted x_tilde = x - beta*b, computed
+## by ecm_fr() before calling this function.)
 ##
-## Three findings, in order of actual impact:
+## This used to carry its own bespoke Woodbury implementation
+## (.get_diag_vec/.woodbury_block/.apply_Sig_s1) and its own compact
+## representation of Sig_s1, all local to this file. None of that is needed:
+## the same Woodbury reduction is already implemented once, generically, in
+## exp_values.R/helpers.R (.inv_Psi, .wb_identity, .wb_identity2) and reused
+## as-is by .exp_values_fa() for the FA module. FR needs exactly one Woodbury
+## application per study to reduce against Phi (like FA reduces against
+## Lambda_s) -- there's no second factor block to double-reduce against, so
+## none of .exp_values()'s Phi/Lambda_s double-reduction machinery applies
+## either. .get_exp_xf()/.get_exp_ff()/.get_exp_f() (exp_values.R) already
+## compute exactly the sufficient statistics FR needs from delta_Phi, so
+## nothing here is re-derived that isn't already shared.
 ##
-## (1) ALGORITHMIC: the previous version computed a Woodbury block from
-##     Psi_s1 (for Sig_s1 / delta_Phi / Delta_Phi) AND a second, separate
-##     Woodbury block from 1/Psi_s (for Woodbury_f / E_fis_x_is). Since
-##     Psi_s1 IS Psi_s^{-1} (confirmed), those two blocks are, mathematically,
-##     the exact same computation performed twice. This was already true of
-##     the *original* code (`Sig_s1` used Psi_s1 directly; `Woodbury_f` used
-##     `.inv_Psi(Psi_s[[s]])` to recompute the same inverse from scratch).
-##     Merging them removes an entire redundant O(n k^2) block per group,
-##     per call -- this dominates everything else below.
-##
-##     A consequence: Psi_s is no longer touched anywhere in this function.
-##     det(Psi_s) is obtained from Psi_s1 via -sum(log(psi_s1)) instead.
-##     `Psi_s` is kept as a parameter purely so existing call sites (which
-##     pass it positionally) don't break -- because R evaluates arguments
-##     lazily, an unused parameter that the body never references is never
-##     forced, so keeping it costs ~nothing here even though it's unused.
-##     (If you're willing to touch every call site, dropping it outright
-##     also saves whatever `[[` your EM driver used to build the list.)
-##
-## (2) CONSTANT-FACTOR / BLAS: t(X) %*% Y patterns were replaced with
-##     crossprod()/tcrossprod(), which do the transpose and multiply in one
-##     fused BLAS call instead of materialising a transposed copy first.
-##     The k x k inverse now uses chol2inv(chol(.)) instead of solve(),
-##     which is faster for symmetric PD matrices (with a symmetrization
-##     step + solve() fallback, since this now runs unattended for
-##     thousands of iterations and a rare float-asymmetry chol() failure
-##     would be worse than a slightly slower solve()).
-##
-## (3) ALLOCATION: get_diag_vec / woodbury_block / apply_Sig_s1 used to be
-##     closures defined *inside* .exp_values_fr, so R allocated fresh
-##     function objects (and closure environments) on every single call.
-##     They're now module-level functions, created once. Sig_s1[[s]] no
-##     longer stores a redundant copy of `Phi` or a per-group reference to
-##     `apply_Sig_s1` (same object, S times over, every call) -- it stores
-##     only what's actually group-specific. `dim(Phi)` is read once instead
-##     of twice. `I_k` can be built once outside the EM loop (it depends
-##     only on k, which is fixed for the run) and handed in, instead of
-##     being reallocated on every call.
-##
-##     Note what's deliberately *not* touched: the `for (s in seq_len(S))`
-##     loop itself. S is small by assumption, so R's per-iteration loop
-##     overhead is negligible next to the O(n k^2) linear algebra inside
-##     each iteration -- "vectorizing across groups" (e.g. block-diagonal
-##     stacking) would add real complexity for no measurable win, and
-##     could even hurt by inflating the size of intermediate matrices.
-##     The vectorization that matters here is *within* each iteration,
-##     handed off to BLAS via crossprod/tcrossprod/chol2inv.
-##
-##     Also new: `getdet` now always produces `logds_s` (the numerically
-##     safe form) but only exponentiates to `ds_s` if `raw_det = TRUE`,
-##     since an EM driver tracking log-likelihood has no use for S
-##     `exp()` calls it's going to discard every iteration.
+## Sig_s1/ds_s are dense p x p matrices / plain determinants (not the compact
+## Woodbury representation the previous version of this file used), because
+## ecm_fr()'s stopping rule calls the *existing* .loglik_ecm(Sig_s1, ds_s,
+## n_s, cov_s), which does Sig_s1[[s]] %*% cov_s[[s]] and log(ds_s[[s]])
+## directly -- same reasoning as .exp_values_fa(). det(Sig_s) still avoids an
+## O(p^3) dense determinant via the matrix-determinant lemma:
+##   det(Psi_s + Phi Phi') = det(Psi_s) * det(I_k + Phi' Psi_s^-1 Phi)
 ## =============================================================================
 
-## ---- module-level helpers: created once, not re-created on every call ----
-
-.get_diag_vec <- function(Psi, dense_warn_n = 3000L) {
-  if (is.matrix(Psi)) {
-    if (nrow(Psi) > dense_warn_n) {
-      warning("A ", nrow(Psi), " x ", nrow(Psi), " dense matrix was passed ",
-              "for a diagonal covariance; store it as a plain vector ",
-              "upstream to avoid O(n^2) memory and repeated diag() ",
-              "extraction on every EM iteration.", call. = FALSE)
-    }
-    diag(Psi)
-  } else {
-    Psi
-  }
-}
-
-# One Woodbury block for Sig = diag(1/prec_vec) + Phi %*% t(Phi).
-.woodbury_block <- function(Phi, prec_vec, I_k) {
-  Y <- Phi * prec_vec                  # n x k,  == diag(prec_vec) %*% Phi
-  A <- crossprod(Phi, Y)               # k x k,  == t(Phi) %*% diag(prec_vec) %*% Phi  (fused, no explicit t())
-  A <- (A + t(A)) * 0.5                # guard against float asymmetry before chol()
-  M <- tryCatch(
-    chol2inv(chol(I_k + A)),
-    error = function(e) solve(I_k + A) # robust fallback; should essentially never trigger
-  )
-  W <- tcrossprod(M, Y)                # k x n,  == M %*% t(Y)  (fused, no explicit t())
-  list(A = A, M = M, Y = Y, W = W)
-}
-
-# Apply the *implicit* Sig_s^{-1} = diag(prec) - Y M t(Y) to an n x p matrix
-# X without ever forming it densely: O(n k p) instead of O(n^2 p).
-.apply_Sig_s1 <- function(compact, X) {
-  YtX <- crossprod(compact$Y, X)                        # k x p, == t(Y) %*% X
-  compact$diag * X - compact$Y %*% (compact$M %*% YtX)  # == diag(prec) %*% X  -  Y M t(Y) X
-}
-
-## ---- main function --------------------------------------------------------
-
-.exp_values_fr <- function(Phi, Psi_s, Psi_s1, cov_s, X_s_tilde,
-                            getdet = FALSE,
-                            raw_det = FALSE,
-                            dense_Sig_s1 = FALSE,
-                            dense_warn_n = 3000L,
-                            I_k = NULL)
+#' Expected values for the FR E-step (used by \code{ecm_fr()})
+#'
+#' Computes the sufficient statistics needed by the CM-steps of \code{ecm_fr()} for a
+#' factor-regression model with a single common factor and no per-study loadings:
+#' \eqn{\tilde{x}_{is} = \Phi f_{is} + e_{is}}{x_is = Phi f_is + e_is}, with
+#' \eqn{e_{is} \sim N(0, \Psi_s)}{e_is ~ N(0, Psi_s)} and \eqn{f_{is} \sim N(0, I)}{f_is ~ N(0, I)},
+#' where \eqn{\tilde{x}_{is}}{x_is} is the covariate-adjusted response.
+#' @param Phi Common factor loading matrix, \eqn{p \times k}{p x k} (shared across all studies).
+#' @param Psi_s List of length \eqn{S}{S}, study-specific idiosyncratic covariance matrices, each a
+#' \eqn{p \times p}{p x p} diagonal matrix.
+#' @param cov_s List of length \eqn{S}{S}, study-specific sample covariance matrices of the
+#' covariate-adjusted response.
+#' @param X_s_tilde List of length \eqn{S}{S}, the covariate-adjusted response data matrices
+#' (\eqn{n_s \times p}{n_s x p}), used for the factor-score expectations needed by the \eqn{\beta}
+#' CM-step.
+#' @param getdet If \code{TRUE}, also returns \code{Sig_s1} (\eqn{\Sigma_s^{-1}}{Sigma_s^-1}) and
+#' \code{ds_s} (\eqn{\det(\Sigma_s)}{det(Sigma_s)}), as required by \code{.loglik_ecm()}. Default is
+#' \code{FALSE}, since these are only needed for the log-likelihood/stopping-rule evaluation.
+#' @return A list containing:
+#' \item{Txsfcs}{list of \eqn{E[\tilde{x}_s f_s']}{E[x_s f_s']}, i.e. \eqn{p \times k}{p x k} matrices.}
+#' \item{Tfcsfcs}{list of \eqn{E[f_s f_s']}{E[f_s f_s']}, i.e. \eqn{k \times k}{k x k} matrices.}
+#' \item{E_fis_x_is}{list of \eqn{E[f_{is} | x_{is}]}{E[f_is | x_is]}, i.e. \eqn{k \times n_s}{k x n_s}
+#' matrices (one column per individual), used to update \eqn{\beta}.}
+#' \item{Sig_s1}{(only if \code{getdet = TRUE}) list of \eqn{\Sigma_s^{-1}}{Sigma_s^-1}, dense
+#' \eqn{p \times p}{p x p} matrices.}
+#' \item{ds_s}{(only if \code{getdet = TRUE}) list of \eqn{\det(\Sigma_s)}{det(Sigma_s)} scalars.}
+#' @details
+#' Reuses \code{.inv_Psi()}, \code{.wb_identity()} and \code{.wb_identity2()} (\code{helpers.R} /
+#' \code{exp_values.R}) to apply the Woodbury identity, and \code{.get_exp_xf()} /
+#' \code{.get_exp_ff()} / \code{.get_exp_f()} (\code{exp_values.R}) to assemble the sufficient
+#' statistics -- the same building blocks \code{.exp_values_fa()} uses for the FA module.
+#' @references Avalos-Pacheco, A., Rossell, D. and Savage, R.S. (2022). Heterogeneous Large Datasets
+#' Integration Using Bayesian Factor Regression. Bayesian Analysis, 17, 33-66.
+#' @keywords internal
+.exp_values_fr <- function( Phi, Psi_s, cov_s, X_s_tilde, getdet = FALSE )
 {
-  # `Psi_s` intentionally unused -- see note (1) above. Kept as a parameter
-  # only so existing positional call sites keep working; R's lazy argument
-  # evaluation means it's never forced, so this costs nothing here.
+  k   <- ncol( Phi )
+  I_k <- diag( 1, k )
 
-  d <- dim(Phi); n <- d[1L]; k <- d[2L]
-  if (is.null(I_k)) I_k <- diag(1, k)   # pass this in from the EM driver to
-                                         # avoid rebuilding it every iteration
-  S <- length(Psi_s1)
+  inv_Psi_s <- lapply( Psi_s, .inv_Psi )
 
-  Sig_s1     <- vector("list", S)
-  ds_s       <- vector("list", S)
-  logds_s    <- vector("list", S)
-  Txsfcs     <- vector("list", S)
-  Tfcsfcs    <- vector("list", S)
-  E_fis_x_is <- vector("list", S)
+  ## delta_s = (I_k + Phi' Psi_s^-1 Phi)^-1 Phi' Psi_s^-1  -- a single
+  ## Woodbury application per study, exactly as .exp_values_fa() does for
+  ## Lambda_s; FR has no second loading matrix to reduce against.
+  delta_Phi <- Map( .wb_identity, list( Phi ), inv_Psi_s, list( I_k ) )
 
-  for (s in seq_len(S)) {
+  Txsfcs     <- Map( .get_exp_xf, delta_Phi, cov_s )
+  Tfcsfcs    <- Map( .get_exp_ff, list( Phi ), delta_Phi, cov_s, list( I_k ) )
+  E_fis_x_is <- Map( .get_exp_f, delta_Phi, X_s_tilde )
 
-    psi_s1 <- .get_diag_vec(Psi_s1[[s]], dense_warn_n)   # Psi_s^{-1}, length n
+  out <- list( Txsfcs = Txsfcs, Tfcsfcs = Tfcsfcs, E_fis_x_is = E_fis_x_is )
 
-    ## single Woodbury block. Under the confirmed Psi_s1 == Psi_s^{-1},
-    ## this replaces what used to be two identical blocks: it feeds
-    ## Sig_s1 / delta_Phi / Delta_Phi *and* the old separate
-    ## Woodbury_f / E_fis_x_is computation, because they were always the
-    ## same object.
-    wb <- .woodbury_block(Phi, psi_s1, I_k)
-    delta_Phi_s <- wb$W    # t(Phi) %*% Sig_s^{-1}                 (k x n)
-    Delta_Phi_s <- wb$M    # I_k - t(Phi) %*% Sig_s^{-1} %*% Phi   (k x k)
+  if ( getdet ) {
+    ## Sig_s^-1 = Psi_s^-1 - Psi_s^-1 Phi delta_s   (dense p x p, via Woodbury)
+    out$Sig_s1 <- Map( .wb_identity2, inv_Psi_s, list( Phi ), list( I_k ) )
 
-    Sig_s1[[s]] <- list(diag = psi_s1, Y = wb$Y, M = wb$M)   # apply via .apply_Sig_s1()
-
-    if (dense_Sig_s1) {
-      if (n > dense_warn_n) {
-        warning("Densifying a ", n, " x ", n, " matrix for group ", s,
-                 "; this defeats the memory savings of the Woodbury ",
-                 "representation and should not be enabled inside an EM ",
-                 "loop.", call. = FALSE)
-      }
-      Sig_s1[[s]]$dense <- diag(psi_s1) - tcrossprod(wb$Y %*% wb$M, wb$Y)
-    }
-
-    if (getdet) {
-      # det(Psi_s) = 1 / det(Psi_s1) = 1 / prod(psi_s1); on the log scale,
-      # so this stays finite for large n regardless of raw_det.
-      logdet_Ik_A  <- as.numeric(determinant(I_k + wb$A, logarithm = TRUE)$modulus)
-      logds_s[[s]] <- -sum(log(psi_s1)) + logdet_Ik_A
-      if (raw_det) ds_s[[s]] <- exp(logds_s[[s]])
-    }
-
-    Txsfcs[[s]]     <- tcrossprod(cov_s[[s]], delta_Phi_s)          # n x k
-    Tfcsfcs[[s]]    <- delta_Phi_s %*% Txsfcs[[s]] + Delta_Phi_s    # k x k, Txsfcs reused
-    E_fis_x_is[[s]] <- tcrossprod(delta_Phi_s, X_s_tilde[[s]])      # k x N_s
+    ## det(Sig_s) via the matrix-determinant lemma: det(Psi_s) * det(I_k + Phi' Psi_s^-1 Phi),
+    ## i.e. an O(p) diagonal product and a determinant on a k x k matrix, instead of an O(p^3)
+    ## dense determinant on Sig_s itself.
+    det_Psi_s <- lapply( Psi_s, function( Psi ) prod( diag( Psi ) ) )
+    inner     <- lapply( inv_Psi_s, function( iP ) I_k + crossprod( Phi, iP ) %*% Phi )
+    out$ds_s  <- Map( function( dPsi, inn ) dPsi * det( inn ), det_Psi_s, inner )
   }
 
-  list(Txsfcs = Txsfcs, Tfcsfcs = Tfcsfcs, E_fis_x_is = E_fis_x_is,
-       ds_s = ds_s, logds_s = logds_s, Sig_s1 = Sig_s1)
+  out
 }

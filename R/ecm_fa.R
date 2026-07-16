@@ -39,9 +39,7 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
   S <- length(X_s)
   n_s <- numeric(S)
   #######defining objects
-  Psi_s1 <- list()
   cov_s <- list()
-  Phi <- matrix(0, nrow=p, ncol=1)
   ######1st round of cycle
   for(s in 1:S){
     n_s[s] <-  dim(X_s[[s]])[[1]]
@@ -52,11 +50,10 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
     FA.s <- factanal(X_s[[s]], factors = tot_s[[s]], covmat = cov_s[[s]],  n.obs=nrow(X_s[[s]]), rotation = "none")
     Omega_s[[s]] <- FA.s$loadings
     Psi_s[[s]] <- diag(FA.s$uniq)
-    Psi_s1[[s]] <-  diag(1/diag(Psi_s[[s]]))
   }
   ######E-step
-  out <- .exp_values(Phi, Omega_s, Psi_s, Psi_s1, cov_s, getdet = TRUE)
-  Sig_s1 <- out$Sig_s1; ds_s= out$ds_s;
+  out <- .exp_values_fa(Omega_s, Psi_s, cov_s, getdet = TRUE)
+  Sig_s1 <- out$Sig_s1; ds_s <- out$ds_s
   l_stop0 <- 0
   lm1 <- 0
   l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
@@ -65,37 +62,23 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
     ###########CM1 ---------------------------------------------------------------------------------------
 
     ######expected values
-    out <- .exp_values(Phi, Omega_s, Psi_s, Psi_s1, cov_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs; Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
-    ######update  of Phi_s
+    out <- .exp_values_fa(Omega_s, Psi_s, cov_s)
+    Txsfs <- out$Txsfs; Tfsfs <- out$Tfsfs
+    ######update of Psi_s
     Psi_new <- list()
-    Psi_new1 <- list()
 
     for(s in 1:S){
       Psi_new[[s]]  <- diag(cov_s[[s]] + Omega_s[[s]] %*% Tfsfs[[s]] %*% t(Omega_s[[s]]) -  2*Txsfs[[s]] %*% t(Omega_s[[s]]) )
       Psi_new[[s]] <- diag(Psi_new[[s]])
-      ##########inverse
-      Psi_new1[[s]] <- diag(1/diag(Psi_new[[s]]))
     }
 
     ###########CM2 ---------------------------------------------------------------------------------------
 
     ######expected values
-    out<- .exp_values(Phi, Omega_s, Psi_new, Psi_new1, cov_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
-    Tfcsfcs <- out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
+    out <- .exp_values_fa(Omega_s, Psi_new, cov_s)
+    Txsfs <- out$Txsfs; Tfsfs <- out$Tfsfs
 
-    ######update of Phi: not needed
-
-
-    ########CM3 ---------------------------------------------------------------------------------------
-
-    ######expected values
-    out <- .exp_values(Phi, Omega_s, Psi_new, Psi_new1, cov_s)
-    Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
-    Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
-
-    ######update of Phi
+    ######update of Omega_s
     Omega_new <- list()
     for(s in 1:S) {
       Omega_new[[s]] <- matrix((Txsfs[[s]] %*% solve(Tfsfs[[s]])), p, tot_s[s])
@@ -103,19 +86,17 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
     }
 
     ###########stopping rule
-    out <- .exp_values(Phi, Omega_new, Psi_new, Psi_new1, cov_s, getdet = TRUE)
+    out <- .exp_values_fa(Omega_new, Psi_new, cov_s, getdet = TRUE)
 
-     Sig_s1 <- out$Sig_s1
+    Sig_s1 <- out$Sig_s1
     ds_s <- out$ds_s
     l1 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
     a <- (l1 - l0)/ (l0-lm1)
     l_stop <- lm1 + (1/ (1-a)) * (l0-lm1)
-    l0 <- .loglik_ecm(Sig_s1,  ds_s, n_s, cov_s)
     if((trace) & (i %% 100 == 0))  cat("i=", i, "Criterion for convergence ", abs(l_stop-l_stop0), "\n")
     if( (abs(l_stop-l_stop0)<tol) & i > 1 & l_stop != Inf) break
     Psi_s <- Psi_new
     Omega_s <- Omega_new
-    Psi_s1 <- Psi_new1
     lm1 <- l0
     l0 <- l1
     l_stop0 <- l_stop

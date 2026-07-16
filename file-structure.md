@@ -6,5 +6,6 @@
 - `R/start_msfr.R` handles parameter initialisation of the multi-study factor regression module.
 - `R/exp_values_msfr.R` is a module that handles the estimation of expected values for the `R/ecm_msfr.R` module
 - `R/exp_values_fr.R` is a module that handles the estimation of expected values for the `R/ecm_fr.R` module
+- `R/exp_values_fa.R` is a module that handles the estimation of expected values (`.exp_values_fa()`) for the `R/ecm_fa.R` module. Unlike the generic `.exp_values()`, it has no common-factor (`Phi`) term, so it applies a single Woodbury reduction per study instead of the double reduction MSFR needs.
 - `R/heat_plot.R` and `R/vcov_msfr.R` are both post-processing modules
 - you must only modify files in the `R/`directory of this package project, unless specificly stated otherwise by me

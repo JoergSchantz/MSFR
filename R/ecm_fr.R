@@ -50,7 +50,6 @@ ecm_fr <- function(
   k     <- dim( start$Phi )[[2]]
   S     <- length( X_s )
   n_s   <- numeric( S )
-  p_b   <- dim( beta )[[2]]
   #######defining objects
   Psi_s1 <- Psi_s <- cov_s <- list()
 
@@ -72,17 +71,16 @@ ecm_fr <- function(
   for( s in 1:S ) {
     n_s[s]       <- dim( X_s[[s]] )[[1]]
     Psi_s[[s]]   <- diag( psi_s[[s]] )
-    Psi_s1[[s]]  <- diag( 1 / psi_s[[s]] )
+    Psi_s1[[s]]  <- .inv_Psi( Psi_s[[s]] )
     cov_s[[s]]   <- cov( X_s[[s]] )
   }
   ######E-step
-  out    <- .exp_values_fr( 
+  out    <- .exp_values_fr(
               Phi,
               Psi_s,
-              Psi_s1,
               cov_s,
               X_s,
-              getdet = TRUE 
+              getdet = TRUE
             )
   Sig_s1  <- out$Sig_s1
   ds_s    <- out$ds_s
@@ -91,20 +89,15 @@ ecm_fr <- function(
   l0      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
   for( i in ( 1:nIt ) )
   {
-    if( i %% 100 == 0 ) { print( i ) }
     ###########CM1 ---------------------------------------------------------------------------------------
 
     ######expected values
     out     <- .exp_values_fr( Phi,
                                 Psi_s,
-                                Psi_s1,
                                 cov_s,
                                 X_s )
-    Txsfs   <- out$Txsfs
     Txsfcs  <- out$Txsfcs
-    Tfsfs   <- out$Tfsfs
     Tfcsfcs <- out$Tfcsfcs
-    Tfcsfs  <- out$Tfcsfs
     ######update  of Phi_s
     Psi_new  <- list()
     Psi_new1 <- list()
@@ -114,9 +107,9 @@ ecm_fr <- function(
       term2         <- Phi %*% Tfcsfcs[[s]] %*% t( Phi )
       term3         <- 2 * Txsfcs[[s]] %*% t( Phi )
       psi_new[[s]]  <- cov_s[[s]] + term2 - term3
-      Psi_new[[s]]  <- diag( psi_new[[s]] )
+      Psi_new[[s]]  <- diag( diag( psi_new[[s]] ) )
       ##########inverse
-      Psi_new1[[s]] <- diag( 1 / diag( Psi_new[[s]] ) )
+      Psi_new1[[s]] <- .inv_Psi( Psi_new[[s]] )
     }
 
     ###########CM2 ---------------------------------------------------------------------------------------
@@ -124,27 +117,16 @@ ecm_fr <- function(
     ######expected values
     out     <- .exp_values_fr( Phi,
                                 Psi_new,
-                                Psi_new1,
                                 cov_s,
                                 X_s )
-    Txsfs   <- out$Txsfs
     Txsfcs  <- out$Txsfcs
-    Tfsfs   <- out$Tfsfs
     Tfcsfcs <- out$Tfcsfcs
-    Tfcsfs  <- out$Tfcsfs
-
-    ########CM3 ---------------------------------------------------------------------------------------
-
-    ######expected values
-    #out <- .exp_values(Phi, Omega_s, Psi_new, Psi_new1, cov_s)
-    #Txsfs <- out$Txsfs; Txsfcs <- out$Txsfcs; Tfsfs <- out$Tfsfs;
-    #Tfcsfcs <-  out$Tfcsfcs; Tfcsfs <- out$Tfcsfs
 
     ######update of Phi
     C_s    <- list()
     kron_s <- list()
     for( s in 1:S ) {
-      C_s[[s]]    <- n_s[s] * Psi_new1[[s]] %*% Txsfcs[[s]] #- n_s[s] * Psi_new1[[s]] %*% Lambda_s[[s]] %*% t(Tfcsfs[[s]])
+      C_s[[s]]    <- n_s[s] * Psi_new1[[s]] %*% Txsfcs[[s]]
       kron_s[[s]] <- kronecker( t( Tfcsfcs[[s]] ), n_s[s] * Psi_new1[[s]] )
     }
     C       <- Reduce( '+', C_s )
@@ -152,21 +134,16 @@ ecm_fr <- function(
     Phi_vec <- solve( kron ) %*% matrix( as.vector( C ) )
     Phi_new <- matrix( Phi_vec, p, k )
 
-    ########CM4: new part for beta---------------------------------------------------------------------------------------
+    ########CM3: new part for beta---------------------------------------------------------------------------------------
 
     ######expected values
     out        <- .exp_values_fr( Phi_new,
                                    Psi_new,
-                                   Psi_new1,
                                    cov_s,
                                    X_s )
-    Txsfs      <- out$Txsfs
     Txsfcs     <- out$Txsfcs
-    Tfsfs      <- out$Tfsfs
     Tfcsfcs    <- out$Tfcsfcs
-    Tfcsfs     <- out$Tfcsfs
     E_fis_x_is <- out$E_fis_x_is
-    E_lis_x_is <- out$E_lis_x_is
 
     ######update of beta
     first_part_s <- list()
@@ -185,7 +162,6 @@ ecm_fr <- function(
     ###########stopping rule
     out <- .exp_values_fr( Phi_new,
                             Psi_new,
-                            Psi_new1,
                             cov_s,
                             X_s,
                             getdet = TRUE )
@@ -195,7 +171,6 @@ ecm_fr <- function(
     l1      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
     a       <- ( l1 - l0 ) / ( l0 - lm1 )
     l_stop  <- lm1 + ( 1 / ( 1 - a ) ) * ( l0 - lm1 )
-    l0      <- .loglik_ecm( Sig_s1, ds_s, n_s, cov_s )
     if( ( trace ) & ( i %% 100 == 0 ) ) {
       cat( "i=",
            i,
@@ -205,7 +180,7 @@ ecm_fr <- function(
     }
     if( ( abs( l_stop - l_stop0 ) < tol ) & i > 1 & l_stop != Inf ) break
     Psi_s   <- Psi_new
-    #Omega_s <- Omega_new
+    Phi     <- Phi_new
     Phi_s   <- Phi_new
     Beta_s  <- beta_new
     Psi_s1  <- Psi_new1
