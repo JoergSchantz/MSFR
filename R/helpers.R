@@ -23,6 +23,15 @@
 #' Inverts often used Psi matrix more efficiently than solve()
 .inv_Psi <- function( Psi ) diag( 1 / diag( Psi ) )
 
+#' @keywords internal
+#' Same as .inv_Psi(), but returns the length-p diagonal as a plain vector
+#' instead of a dense p x p matrix. Psi_s^-1 is always diagonal, so callers
+#' that only ever feed it into .wb_identity()/.wb_identity2() (as opposed to
+#' needing a real p x p object, e.g. for kronecker() in ecm_fr.R) should use
+#' this instead: it lets those functions take their vector-aware fast path
+#' and skip an O(p^2) allocation entirely. See .wb_identity()'s docs.
+.inv_Psi_vec <- function( Psi ) 1 / diag( Psi )
+
 # just keeping it for the moment
 #' @keywords internal
 .Exp_values <- function(
@@ -100,71 +109,6 @@
               Tfcsfcs =  Tfcsfcs, Tfcsfs = Tfcsfs, 
               E_fis_x_is = E_fis_x_is, E_lis_x_is = E_lis_x_is, 
               ds_s=ds_s))
-}
-
-
-#' @importFrom statmod vecmat 
-#' @importFrom statmod matvec
-#' @keywords internal
-.exp_values_fr <- function( Phi, Psi_s, Psi_s1, cov_s, X_s_tilde, getdet = FALSE )
-{
-  k <- dim( Phi )[2]
-  I_k <- diag( 1, k )
-  S <- length( Psi_s )
-  
-  ###defining objects
-  Sig_s <- list()
-  ds_s <- list()
-  I_tot <- list()
-  # LambTOT <- list()
-  Sig_s1 <- list()
-  delta_Phi <- list()
-  Delta_Phi <- list()
-  Covfcfs <- list()
-  Txsfcs <- list()
-  Tfcsfcs <- list()
-  Woodbury_f <- list()
-  E_fis_x_is <- list()
-  
-  for ( s in 1:S ){
-    ds_s[[s]] <- NULL
-    #j_s[s] <- c(dim(Lambda_s[[s]])[[2]])
-    # Sig_s[[s]] <- Phi %*% t(Phi) + Psi_s[[s]]
-    Sig_s[[s]] <- tcrossprod( Phi ) + Psi_s[[s]]
-    if ( getdet ) ds_s[[s]] <- det( Sig_s[[s]] )
-    # I_tot[[s]] <- diag( 1, k )
-    # LambTOT[[s]] <- Phi
-    # Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), LambTOT[[s]]) %*%
-    #                                solve(I_tot[[s]] + (t(LambTOT[[s]]) %*% statmod::vecmat(diag(Psi_s1[[s]]),
-    #
-    Sig_s1[[s]] <- Psi_s1[[s]] - (statmod::vecmat(diag(Psi_s1[[s]]), Phi) %*%
-                                    solve(I_k + (t(Phi) %*% statmod::vecmat(diag(Psi_s1[[s]]),
-                                                                                             Phi ))) %*% statmod::matvec(t( Phi ), diag(Psi_s1[[s]])))
-    # delta_Phi[[s]] <- t(Phi) %*% Sig_s1[[s]]
-    delta_Phi[[s]] <- crossprod( Phi, Sig_s1[[s]] )
-    # Delta_Phi[[s]] <- I_k - (t(Phi) %*% Sig_s1[[s]] %*% Phi)
-    Delta_Phi[[s]] <- I_k - ( crossprod( Phi, Sig_s1[[s]] ) %*% Phi )
-    # Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
-    Txsfcs[[s]] <- tcrossprod( cov_s[[s]], delta_Phi[[s]] )
-    # Tfcsfcs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Phi[[s]]) + Delta_Phi[[s]]
-    Tfcsfcs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Phi[[s]] ) + Delta_Phi[[s]]
-
-    ##new part for beta
-    # Woodbury_f[[s]] <- solve(I_k + t(Phi) %*%  diag(1/diag(Psi_s[[s]])) %*% Phi) %*% t(Phi) %*% diag(1/diag(Psi_s[[s]]))
-    Woodbury_f[[s]] <- .wb_identity( Phi, .inv_Psi( Psi_s[[s]] ), I_k )
-    # E_fis_x_is[[s]] <- Woodbury_f[[s]] %*% t(X_s_tilde[[s]])
-    E_fis_x_is[[s]] <- tcrossprod( Woodbury_f[[s]], X_s_tilde[[s]] )
-
-  }
-  return(
-    list( 
-      Txsfcs = Txsfcs,
-      Tfcsfcs =  Tfcsfcs,
-      E_fis_x_is = E_fis_x_is, 
-      ds_s=ds_s,
-      Sig_s1 = Sig_s1
-    )
-  )
 }
 
 

@@ -28,7 +28,7 @@ start_value <- start_msfa(X_s, B_s, p_b, k, j_s, constraint = "block_lower2", me
 Now we can proceed for estimating the model parameters via the ECM algorithm
 
 ```{r get estimate, results = FALSE}
-ECM_MSFR <- ecm_msfa(X_s, B_s, start=start_value,  nIt = 10000, trace = FALSE)
+ECM_MSFR <- ecm_msfr(X_s, B_s, start=start_value,  nIt = 10000, trace = FALSE)
 ```
 
 The estimated matrix of common loadings can be visualized

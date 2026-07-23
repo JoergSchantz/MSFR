@@ -6,15 +6,14 @@
 \alias{MSFR-package}
 \title{MSFR: Multi-Study Factor Regression Model}
 \description{
-Diet is a risk factor for many diseases. In nutritional epidemiology, studying reproducible dietary patterns is critical to reveal impor- tant associations with health. However, this task is challenging: diverse cultural and ethnic backgrounds may critically impact eating patterns by showing heterogeneity, leading to incorrect dietary patterns and obscuring the components shared across dif- ferent groups or populations. Moreover, covariate effects generated from observed variables, such as demographics and other confounders, can further bias these dietary patterns. Identifying the shared and group-specific dietary components and covari- ate effects is essential to drive accurate conclusions. To address these issues, we introduce a new modeling factor regression, the Multistudy Factor Regression (MSFR) model. The MSFR model analyzes different populations simultaneously, achieving three goals: capturing shared component(s) across populations, identifying group-specific structures, and correcting for covariate effects. We use this novel method to derive common and ethnic-specific dietary patterns in a multicenter epidemiological study in His- panic/Latinos community. Our model improves the accuracy of common and group dietary signals, provides a robust estimation of factor cardinality, and yields better prediction than other techniques, revealing important associations with health and cardio- vascular disease. In summary, we provide a tool to integrate different groups, providing accurate dietary signals crucial to inform public health policy.
+Diet is a risk factor for many diseases. In nutritional epidemiology, studying reproducible dietary patterns is critical to reveal important associations with health. However, this task is challenging: diverse cultural and ethnic backgrounds may critically impact eating patterns by showing heterogeneity, leading to incorrect dietary patterns and obscuring the components shared across different groups or populations. Moreover, covariate effects generated from observed variables, such as demographics and other confounders, can further bias these dietary patterns. Identifying the shared and group-specific dietary components and covariate effects is essential to drive accurate conclusions. To address these issues, we introduce a new modeling factor regression, the Multistudy Factor Regression (MSFR) model. The MSFR model analyzes different populations simultaneously, achieving three goals: capturing shared component(s) across populations, identifying group-specific structures, and correcting for covariate effects. We use this novel method to derive common and ethnic-specific dietary patterns in a multicenter epidemiological study in His- panic/Latinos community. Our model improves the accuracy of common and group dietary signals, provides a robust estimation of factor cardinality, and yields better prediction than other techniques, revealing important associations with health and cardio- vascular disease. In summary, we provide a tool to integrate different groups, providing accurate dietary signals crucial to inform public health policy.
 }
 \author{
-\strong{Maintainer}: 
+\strong{Maintainer}: Alejandra Avalos-Pacheco \email{alejandra.avalos_pacheco@jku.at}
 
 Authors:
 \itemize{
   \item Roberta De Vito \email{roberta_devito@brown.edu}
-  \item Alejandra Avalos-Pacheco
 }
 
 Other contributors:

@@ -36,6 +36,7 @@
 
 #'@keywords internal
 .update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j ) {
+  p  <- dim(Phi)[1]
   A_ <- Phi %*% exp_fl
   B_ <- exp_xl - A_
   C_ <- solve( exp_ll )
@@ -59,9 +60,9 @@
   X_og - tcrossprod( B_s, beta )
 }
 
-#' Estimates the parameters of a MSFA model
+#' Estimates the parameters of a MSFR model
 #'
-#' Maximum likelihood estimation of the MSFA model parameters via the ECM
+#' Maximum likelihood estimation of the MSFR model parameters via the ECM
 #' algorithm.
 #'
 #' There are two different constraints for achieving model identification,
@@ -103,7 +104,7 @@
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2018). (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' of Multivariate Analysis, 84, 145-172.
-ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, 
+ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, 
                      constraint = "block_lower2", trace = TRUE)
 {
   S <- length(X_s)
@@ -174,7 +175,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
       nPsi1, Lambda_s, exp_xf, exp_fl
     )
     kron_s <- Map(
-      function( nPsi1, exp_ff ) kronecker( WoodburyMatrix::t(exp_ff), nPsi1 ),
+      function( nPsi1, exp_ff ) kronecker( t(exp_ff), nPsi1 ),
       nPsi1, exp_ff
     )
     C <- Reduce( '+', C_s )
@@ -249,13 +250,13 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
       Delta <- Delta / 2
       sh <- sh + 1
       theta_test <- theta + Delta
-      param <- .vect2param(theta_new, param.struct, constraint, p, k, j_s)
+      param <- .vect2param(theta_test, param.struct, constraint, p, k, j_s)
       Lambda_new <- c()
-      psi_new <- param$psi_new
+      psi_new <- param$psi_s
       for(s in 1:S) {
         Lambda_new[[s]] <- param$Lambda_s[[s]]
         Psi_new[[s]] <- diag(psi_new[[s]])
-        Psi1_new[[s]] <- diag(1 / psi_new[[s]])
+        Psi_new1[[s]] <- diag(1 / psi_new[[s]])
       }
       L_sTOT <- Reduce('cbind', Lambda_new)
       Phi_new <- param$Phi
@@ -286,6 +287,7 @@ ecm_msfa <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
 
     # assign vars for new cycle
     Psi_s <- Psi_new
+    psi_s <- psi_new
     Phi <- Phi_new
     Lambda_s <- Lambda_new
     beta <- beta_new

@@ -14,8 +14,7 @@ ecm_fr(
   robust = FALSE,
   corr = TRUE,
   mcd = FALSE,
-  trace = TRUE,
-  traceIT = 1000
+  trace = TRUE
 )
 }
 \arguments{
@@ -40,9 +39,9 @@ otherwise the default value of the function \code{CovRob} of the \code{robust} l
 
 \item{trace}{If \code{TRUE} then trace information is being printed every \code{traceIT} iterations of the ECM algorithm.}
 
-\item{traceIT}{Frequency of tracing information.}
-
 \item{tot_s}{Number of latent factors for each study. A vector of positive integers of length \eqn{S}{S}.}
+
+\item{traceIT}{Frequency of tracing information.}
 }
 \value{
 A list  containing the following components:

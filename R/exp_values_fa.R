@@ -55,10 +55,13 @@
 #' \eqn{p \times p}{p x p} matrices.}
 #' \item{ds_s}{(only if \code{getdet = TRUE}) list of \eqn{\det(\Sigma_s)}{det(Sigma_s)} scalars.}
 #' @details
-#' Reuses \code{.inv_Psi()}, \code{.wb_identity()} and \code{.wb_identity2()} (\code{helpers.R} /
+#' Reuses \code{.inv_Psi_vec()}, \code{.wb_identity()} and \code{.wb_identity2()} (\code{helpers.R} /
 #' \code{exp_values.R}) to apply the Woodbury identity, and \code{.get_exp_xl()} /
 #' \code{.get_exp_ll()} (\code{exp_values.R}) to assemble the sufficient statistics, so none of
-#' this linear algebra is duplicated across the FA/FR/MSFR modules.
+#' this linear algebra is duplicated across the FA/FR/MSFR modules. \code{Psi_s^{-1}} is passed to
+#' \code{.wb_identity()}/\code{.wb_identity2()} as a plain vector rather than a dense matrix, since
+#' it's always diagonal -- this lets them take their row-scaling fast path instead of a dense
+#' \eqn{p \times p}{p x p} multiply.
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor
 #' Analysis. Biometrics, 75, 337-346.
 #' @keywords internal
@@ -66,7 +69,11 @@
 {
   I_j <- lapply( Lambda_s, function( L ) diag( 1, ncol( L ) ) )
 
-  inv_Psi_s <- lapply( Psi_s, .inv_Psi )
+  ## Psi_s is always diagonal, so its inverse is kept as a length-p vector
+  ## rather than a dense p x p matrix: .wb_identity()/.wb_identity2() take
+  ## the vector fast path for it (see their docs), turning what would be an
+  ## O(p^2 q) dense multiply into an O(p q) row-scaling one.
+  inv_Psi_s <- lapply( Psi_s, .inv_Psi_vec )
 
   ## delta_s = (I_qs + Lambda_s' Psi_s^-1 Lambda_s)^-1 Lambda_s' Psi_s^-1
   ## a single Woodbury application per study -- no Phi to reduce against, so
@@ -84,9 +91,10 @@
 
     ## det(Sig_s) via the matrix-determinant lemma: det(Psi_s) * det(I_q + Lambda_s' Psi_s^-1 Lambda_s),
     ## i.e. an O(p) diagonal product and a determinant on a q x q matrix, instead of an O(p^3)
-    ## dense determinant on Sig_s itself.
+    ## dense determinant on Sig_s itself. iP is a vector here (see above), so the inner
+    ## quadratic form is assembled via row-scaling (L * iP) instead of a dense p x p multiply.
     det_Psi_s <- lapply( Psi_s, function( Psi ) prod( diag( Psi ) ) )
-    inner     <- Map( function( L, iP, I ) I + crossprod( L, iP ) %*% L, Lambda_s, inv_Psi_s, I_j )
+    inner     <- Map( function( L, iP, I ) I + crossprod( L * iP, L ), Lambda_s, inv_Psi_s, I_j )
     out$ds_s  <- Map( function( dPsi, inn ) dPsi * det( inn ), det_Psi_s, inner )
   }
 

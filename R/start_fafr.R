@@ -1,5 +1,5 @@
 
-#' Provides some starting values for the parameters of a FR model
+#' Provides some starting values for the parameters of a FR/FA model
 #'
 #' This is a supporting function for \code{ecm_msfa}. The method employed is documented in the reference.
 #'

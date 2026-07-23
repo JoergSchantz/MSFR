@@ -6,17 +6,17 @@
 - [x] Make your package a Git repository using `usethis::use_git()`
 - [x] Put the package on GitHub as a remote repository using `usethis::use_github()`
 - [x] Create your first R script via `usethis::use_r('my_function')`
-- [ ] Add object documentation using roxygen comments
-- [ ] Run `devtools::document()` to render your documentation
+- [x] Add object documentation using roxygen comments
+- [x] Run `devtools::document()` to render your documentation
 - [ ] Create associated unit tests for your functions: with your R script open, use `usethis::use_test()`
 - [ ] Check for test coverage: run `devtools::test_coverage_active_file()` in the active file, or `devtools::test_coverage()` for the whole package
 - [x] Add a license with `usethis::use_mit_license()`
 - [x] Update the DESCRIPTION file: edit the title, include author(s), write a one-paragraph description
 - [x] Add a package-level help page with `usethis::use_package_doc()`
 - [ ] Run `devtools::check()` from time to time
-- [ ] Document your package dependencies with either `usethis::use_package('package_name', min_version = TRUE)` or `usethis::use_import_from('package_name', 'function_name')`
+- [x] Document your package dependencies with either `usethis::use_package('package_name', min_version = TRUE)` or `usethis::use_import_from('package_name', 'function_name')`
 - [ ] Include a Citation File with `cffr::cff_write()`
-- [ ] Add a README file with `usethis::use_readme_rmd()`
+- [x] Add a README file with `usethis::use_readme_rmd()`
 - [ ] Edit the README, and render the .Rmd file with `devtools::build_readme()`
 - [ ] Add the R CMD check GitHub action with `usethis::use_github_action('check-standard')`
 - [ ] Add a vignette, such as `usethis::use_vignette('package_pal')`. Edit the .Rmd file, then preview using `devtools::build_rmd('vignettes/package_pal.Rmd')`

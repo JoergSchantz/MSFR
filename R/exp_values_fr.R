@@ -55,10 +55,12 @@
 #' \eqn{p \times p}{p x p} matrices.}
 #' \item{ds_s}{(only if \code{getdet = TRUE}) list of \eqn{\det(\Sigma_s)}{det(Sigma_s)} scalars.}
 #' @details
-#' Reuses \code{.inv_Psi()}, \code{.wb_identity()} and \code{.wb_identity2()} (\code{helpers.R} /
+#' Reuses \code{.inv_Psi_vec()}, \code{.wb_identity()} and \code{.wb_identity2()} (\code{helpers.R} /
 #' \code{exp_values.R}) to apply the Woodbury identity, and \code{.get_exp_xf()} /
 #' \code{.get_exp_ff()} / \code{.get_exp_f()} (\code{exp_values.R}) to assemble the sufficient
 #' statistics -- the same building blocks \code{.exp_values_fa()} uses for the FA module.
+#' \code{Psi_s^{-1}} is passed as a plain vector rather than a dense matrix, since it's always
+#' diagonal -- see \code{.wb_identity()}'s docs.
 #' @references Avalos-Pacheco, A., Rossell, D. and Savage, R.S. (2022). Heterogeneous Large Datasets
 #' Integration Using Bayesian Factor Regression. Bayesian Analysis, 17, 33-66.
 #' @keywords internal
@@ -67,7 +69,11 @@
   k   <- ncol( Phi )
   I_k <- diag( 1, k )
 
-  inv_Psi_s <- lapply( Psi_s, .inv_Psi )
+  ## Psi_s is always diagonal, so its inverse is kept as a length-p vector
+  ## rather than a dense p x p matrix: .wb_identity()/.wb_identity2() take
+  ## the vector fast path for it (see their docs), turning what would be an
+  ## O(p^2 k) dense multiply into an O(p k) row-scaling one.
+  inv_Psi_s <- lapply( Psi_s, .inv_Psi_vec )
 
   ## delta_s = (I_k + Phi' Psi_s^-1 Phi)^-1 Phi' Psi_s^-1  -- a single
   ## Woodbury application per study, exactly as .exp_values_fa() does for
@@ -86,9 +92,10 @@
 
     ## det(Sig_s) via the matrix-determinant lemma: det(Psi_s) * det(I_k + Phi' Psi_s^-1 Phi),
     ## i.e. an O(p) diagonal product and a determinant on a k x k matrix, instead of an O(p^3)
-    ## dense determinant on Sig_s itself.
+    ## dense determinant on Sig_s itself. iP is a vector here (see above), so the inner
+    ## quadratic form is assembled via row-scaling (Phi * iP) instead of a dense p x p multiply.
     det_Psi_s <- lapply( Psi_s, function( Psi ) prod( diag( Psi ) ) )
-    inner     <- lapply( inv_Psi_s, function( iP ) I_k + crossprod( Phi, iP ) %*% Phi )
+    inner     <- lapply( inv_Psi_s, function( iP ) I_k + crossprod( Phi * iP, Phi ) )
     out$ds_s  <- Map( function( dPsi, inn ) dPsi * det( inn ), det_Psi_s, inner )
   }
 

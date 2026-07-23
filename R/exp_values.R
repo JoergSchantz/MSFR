@@ -98,24 +98,53 @@
 }
 
 #' @keywords internal
-#' Implementation of Woodbury Identity. This will most likely only work 
+#' Implementation of Woodbury Identity. This will most likely only work
 #' inside this package and is not meant to be used outside of it.
+#'
+#' \code{W} is the "D^-1" term of the Woodbury identity, i.e. it's always
+#' symmetric p x p. In MSFR's double reduction (see \code{.exp_values()}),
+#' the *second* application's \code{W} is itself an already Woodbury-reduced
+#' block (\code{wb_f}/\code{wb_l}) and is genuinely dense. But in every
+#' *first* application -- which is the only one FA/FR ever need, since
+#' neither has a second factor block to reduce against -- \code{W} is always
+#' \code{Psi_s^-1}, which is diagonal. Passing that as a length-p vector
+#' (e.g. via \code{.inv_Psi_vec()}) instead of a dense p x p matrix (via
+#' \code{.inv_Psi()}) lets both functions skip the O(p^2) allocation and
+#' replace an O(p^2 q) dense multiply with an O(p q) row-scaling one; the
+#' final result is still assembled as a dense matrix where required (i.e. in
+#' \code{.wb_identity2()}), since \code{Sig_s^-1} genuinely isn't diagonal.
+#' Passing a dense matrix still works exactly as before -- this only adds a
+#' faster path, it doesn't remove the general one.
 #' @references O. Morgenstern and M. A. Woodbury, “Stability of Inverses of Input-Output Matrices,” Econometrica 18 (1950): 190.
 .wb_identity <- function( A, W, I ) {
   # A: being either Lambda_s[[s]] or Phi matrix
   # I: Study (un-)specific Identity matrix
-  cp <- crossprod( A, W )    # to save computation time
-  t1 <- cp %*% A
+  # W: p x p matrix, or a length-p vector standing in for diag(W)
+  if ( is.matrix( W ) ) {
+    cp <- crossprod( A, W )    # to save computation time
+    t1 <- cp %*% A
+  } else {
+    AW <- A * W                  # p x q, == diag(W) %*% A via row recycling
+    cp <- t( AW )                 # q x p, == t(A) %*% diag(W)
+    t1 <- crossprod( AW, A )      # q x q, == cp %*% A
+  }
   inv_t <- solve( I + t1 )
   inv_t %*% cp
 }
 #' @keywords internal
-#' 2nd application of the Woodbury Identity
+#' 2nd application of the Woodbury Identity. See \code{.wb_identity()} for
+#' the vector-vs-matrix \code{W} convention.
 .wb_identity2 <- function( W, A, I ){
   wb <- .wb_identity( A, W, I )
-  t1 <- W %*% A
-  t2 <- t1 %*% wb
-  W - t2
+  if ( is.matrix( W ) ) {
+    t1 <- W %*% A
+    t2 <- t1 %*% wb
+    W - t2
+  } else {
+    t1 <- A * W                  # p x q, == diag(W) %*% A
+    t2 <- t1 %*% wb               # p x p, dense result either way
+    diag( W ) - t2
+  }
 }
 
 #' @keywords internal
