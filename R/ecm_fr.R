@@ -1,12 +1,14 @@
-#' Estimates the parameters of study-specific FA models
+#' Estimates the parameters of study-specific FR models
 #'
-#' Maximum likelihood estimation of study-specific FA models parameters via the ECM
+#' Maximum likelihood estimation of study-specific FR models parameters via the ECM
 #' algorithm, adopting the upper-triangular zero constraint to achieve identification
-#' for each loading matrix. Note: the function can also estimate a FA model for a single
+#' for each loading matrix. Note: the function can also estimate a FR model for a single
 #' study, by specifiyng \code{X_s = list(data)}, where \code{data} is the data matrix.
 #' @param X_s List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
 #' Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
-#' @param tot_s Number of latent factors for each study. A vector of positive integers of length \eqn{S}{S}.
+#' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
+#' Each element of the list contains a data matrix with known covariates or batch size idicators etc. 
+#' @param start
 #' @param nIt Maximum number of iterations for the ECM algorithm. Default is 50000.
 #' @param tol Tolerance for declaring convergence of the ECM algorithm. Default is 10^-7.
 #' @param block_lower Should the upper-triangular zero constraint be enforced? Default is \code{TRUE}
@@ -18,7 +20,6 @@
 #' otherwise the default value of the function \code{CovRob} of the \code{robust} library is employed. Default is
 #' \code{FALSE}.
 #' @param trace If \code{TRUE} then trace information is being printed every \code{traceIT} iterations of the ECM algorithm.
-#' @param traceIT Frequency of tracing information.
 #' @return A list  containing the following components:
 #' \item{\code{Omega_s}, \code{Psi_s}}{the estimated model matrices.}
 #' \item{loglik}{the value of the log likelihood function at the final estimates.}
@@ -41,7 +42,6 @@ ecm_fr <- function(
   corr = TRUE,
   mcd = FALSE,
   trace = TRUE
-  # ,traceIT = 1000 
 )
 {
   Psi_s <- psi_s <- list()

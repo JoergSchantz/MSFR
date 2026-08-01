@@ -18,7 +18,7 @@
 #' @param method Which method should be used to find the starting values? The two possibilities are \code{"adhoc"} for
 #' the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 #' Default is \code{"adhoc"}.
-#' @return A list  containing  \code{Phi},\code{Psi_s} and  \code{beta}, starting values for the model matrices.
+#' @return A list  containing  \code{Phi},\code{psi_s} and  \code{beta}, starting values for the model matrices.
 #' @import psych
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
