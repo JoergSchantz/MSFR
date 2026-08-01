@@ -9,7 +9,7 @@
 #' Each element of the list contains a data matrix, with the same number of columns \eqn{P}for all the studies.
 #' No standardization is carried out by the function.
 #' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
-#' Each element of the list contains a data matrix with the per batch regression factors.
+#' Each element of the list contains a data matrix with known covariates or batch size idicators etc. 
 #' @param k Number of common factors.
 #' @param constraint  Constraint for ensuring identifiability. The default is "block_lower2", which
 #' corresponds to the main proposal of De Vito et al. (2018). An alternative identification
@@ -18,7 +18,7 @@
 #' @param method Which method should be used to find the starting values? The two possibilities are \code{"adhoc"} for
 #' the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 #' Default is \code{"adhoc"}.
-#' @return A list  containing  \code{Phi},\code{Lambda_s} and  \code{psi_s}, starting values for the model matrices.
+#' @return A list  containing  \code{Phi},\code{Psi_s} and  \code{beta}, starting values for the model matrices.
 #' @import psych
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
