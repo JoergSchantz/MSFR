@@ -2,7 +2,7 @@
 % Please edit documentation in R/start_fafr.R
 \name{start_fr}
 \alias{start_fr}
-\title{Provides some starting values for the parameters of a FR model}
+\title{Provides some starting values for the parameters of a FA model}
 \usage{
 start_fr(X_s, B_s, p_b, k, constraint = "block_lower2", method = "adhoc")
 }
@@ -35,7 +35,7 @@ otherwise the default value of the function \code{CovRob} of the \code{robust} l
 A list  containing  \code{Phi},\code{Lambda_s} and  \code{psi_s}, starting values for the model matrices.
 }
 \description{
-This is a supporting function for \code{ecm_msfa}. The method employed is documented in the reference.
+This is a supporting function for \code{ecm_fa} and \code{ecm_fr}. The method employed is documented in the references.
 }
 \details{
 The upper-triangular zero constraint is adopted to achieve identification,

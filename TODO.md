@@ -1,4 +1,4 @@
-321qcvbnm,.-# MSFR package — roadmap to a releasable R package
+# MSFR package — roadmap to a releasable R package
 
 This is a working audit of the whole package (everything except `R/vcov_msfa.R` and
 `R/heat_plot.R`, per instruction) plus a mapping of the non-coding steps still open in
@@ -141,11 +141,8 @@ build stage, before any code is even checked.
   `install.packages()`) would see. Needs a rewrite as a proper package description (what the
   package *does*, in software terms — fits MSFR/FR/FA models via ECM — not the paper's
   scientific abstract).
-- [ ] Add a package-level help page. `man/MSFR-package.Rd` exists but there's no
-  corresponding `"_PACKAGE"` roxygen source anywhere in `R/` — confirmed:
-  `devtools::document()` deletes `MSFR-package.Rd` as an orphan rather than regenerating it.
   Re-run `usethis::use_package_doc()` and re-document.
-- [ ] `Data/Scenario1_MSFR.rda` is a bundled dataset with **no documentation page**
+- [x] `Data/Scenario1_MSFR.rda` is a bundled dataset with **no documentation page**
   (`man/Scenario1_MSFR.Rd` doesn't exist). CRAN requires every bundled dataset to be
   documented (`@format`, `@source`, description of each column/list element). Also worth
   double-checking it's actually current — it's referenced by `README.md`'s example (see
@@ -154,8 +151,6 @@ build stage, before any code is even checked.
   how `Scenario1_MSFR.rda` was serialized. Either re-save it with an older serialization
   version or just declare `Depends: R (>= 3.5.0)` explicitly in `DESCRIPTION` so this is a
   documented decision rather than an implicit one.
-- [ ] Bump `Version:` off the `usethis::create_package()` default (`0.0.0.9000`) once the
-  above are addressed and there's a first coherent state worth tagging.
 
 ---
 

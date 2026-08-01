@@ -45,9 +45,9 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
     n_s[s] <-  dim(X_s[[s]])[[1]]
     if((!robust) & (!corr)) cov_s[[s]] <- cov(X_s[[s]])
     if((!robust) & corr) cov_s[[s]] <- cor(X_s[[s]])
-    if(robust & mcd) cov_s[[s]] <- covRob(X_s[[s]], estim = "mcd", quan = .75, ntrial = 1000, corr = corr)$cov
-    if(robust & (!mcd)) cov_s[[s]] <- covRob(X_s[[s]], corr = corr)$cov
-    FA.s <- factanal(X_s[[s]], factors = tot_s[[s]], covmat = cov_s[[s]],  n.obs=nrow(X_s[[s]]), rotation = "none")
+    if(robust & mcd) cov_s[[s]] <- robust::covRob(X_s[[s]], estim = "mcd", quan = .75, ntrial = 1000, corr = corr)$cov
+    if(robust & (!mcd)) cov_s[[s]] <- robust::covRob(X_s[[s]], corr = corr)$cov
+    FA.s <- stats::factanal(X_s[[s]], factors = tot_s[[s]], covmat = cov_s[[s]],  n.obs=nrow(X_s[[s]]), rotation = "none")
     Omega_s[[s]] <- FA.s$loadings
     Psi_s[[s]] <- diag(FA.s$uniq)
   }

@@ -1,16 +1,16 @@
-#' Provides some starting values for the parameters of a MSFA model
+
+#' Provides some starting values for the parameters of a FR model
 #'
-#' This is a supporting function for \code{ecm_msfa}. The method employed is documented in the reference.
+#' This is a supporting function for \code{ecm_fr}. The method employed is documented in the references.
 #'
 #' The upper-triangular zero constraint is adopted to achieve identification,
 #' as detailed in the reference, though the function can also be run without such constraint.
-#' @param X_s List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
-#' Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
+#' @param X_s List of lenght \eqn{S}{S}, corresponding to the number of different studies considered.
+#' Each element of the list contains a data matrix, with the same number of columns \eqn{P}for all the studies.
 #' No standardization is carried out by the function.
 #' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
 #' Each element of the list contains a data matrix with the per batch regression factors.
 #' @param k Number of common factors.
-#' @param j_s Number of study-specific factors. A vector of positive integers of length \eqn{S}{S}.
 #' @param constraint  Constraint for ensuring identifiability. The default is "block_lower2", which
 #' corresponds to the main proposal of De Vito et al. (2018). An alternative identification
 #' strategy is triggered by  "block_lower1"; this is more restrictive but may work also with smaller
@@ -22,24 +22,23 @@
 #' @import psych
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
-start_msfa <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
+start_fr <- function(X_s, B_s, k, constraint = "block_lower2", method = "adhoc")
 {
   S <- length(X_s)
   X <- Reduce('rbind', X_s)  
   B <- Reduce('rbind', B_s)
-
   fm1 <- stats::lm(X ~ 0+B)
   beta = t(fm1$coefficients)
   
   X_tilde <- vector("list", S)
   for(s in 1:S) X_tilde[[s]] <- X_s[[s]] - tcrossprod(B_s[[s]], beta)
-
+  
   X_used_s <- vector("list", S)
   for(s in 1:S)  X_used_s[[s]] <- scale(X_tilde[[s]])
   
   p <- dim(X_s[[1]])[2]
   Phi <- matrix(0, nrow=p, ncol=k)
-  Lambda_s <- psi_s <- vector("list", S)
+  psi_s <- vector("list", S)
   if(method=="adhoc"){
     X <- Reduce(rbind, X_used_s)
     X.pcr <- stats::prcomp(X)
@@ -51,40 +50,33 @@ start_msfa <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "
         iniLS <- array(stats::prcomp(X_used_s[[s]])$rotation, dim=c(p, j_s[s]))
         iniTot <- cbind(Phi, iniLS)
         iniTot[upper.tri(iniTot)] <- 0
-        Lambda_s[[s]] <- matrix(iniTot[,(k+1):(k+j_s[s])], p , j_s[s])
-        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k+j_s[s])$uniq
+        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k)$uniq
       }
     }
     
     if (constraint == "block_lower2") {
       Phi[upper.tri(Phi)] <- 0
       for(s in 1:S){
-        Lambda_s[[s]] = array(stats::prcomp(X_used_s[[s]])$rotation, dim=c(p, j_s[s]))
-        Lambda_s[[s]][upper.tri(Lambda_s[[s]])] <- 0
-        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k+j_s[s])$uniq
+        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k)$uniq
       }
     }
     
     if (constraint == "null") {
-      Phi <- Phi
       for(s in 1:S){
-        Lambda_s[[s]] = array(stats::prcomp(X_used_s[[s]])$rotation, dim=c(p, j_s[s]))
-        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k+j_s[s])$uniq
+        psi_s[[s]] <- psych::fa(X_used_s[[s]], nfactors = k)$uniq
       }
     }
   }
-
+  #### it is important to post-process the output for avoiding sign changes
   if(method=="fa"){
-    est <- ecm_fa(X_tilde, tot_s = k + j_s, tol = 10^-5, nIt = 5000, trace = FALSE)
+    est <- ecm_fa(X_tilde, tot_s = k, tol = 10^-5, nIt = 5000, trace = FALSE)
     Phi <- est$Omega_s[[1]][,1:k] / S
-    Lambda_s[[1]] <-  est$Omega_s[[1]][,(k+1):(k+j_s[1])]
     psi_s[[1]] <- est$psi_s[[1]]
     for(s in 2:S){
       Phi <- Phi + est$Omega_s[[s]][,1:k] / S * sign(Phi) * sign(est$Omega_s[[s]][,1:k]) ###to avoid sign changes
-      Lambda_s[[s]] <-  est$Omega_s[[s]][,(k+1):(k+j_s[s])]
       psi_s[[s]] <- est$psi_s[[s]]
     }
   }
-  out <- list(Phi=Phi, Lambda_s=Lambda_s, psi_s=psi_s, beta=beta)
+  out <- list(Phi=Phi, psi_s=psi_s, beta=beta)
   return(out)
 }
