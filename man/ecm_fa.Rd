@@ -57,6 +57,18 @@ algorithm, adopting the upper-triangular zero constraint to achieve identificati
 for each loading matrix. Note: the function can also estimate a FA model for a single
 study, by specifiyng \code{X_s = list(data)}, where \code{data} is the data matrix.
 }
+\examples{
+data(Scenario1_MSFR)
+EM <- ecm_msfa(X_s, k)
+# estimated model matrices
+Omega_1 <- EM$Omega_s[[1]]
+# ...
+# study-specific error matrices
+Psi_1 <- EM$Psi_s[[1]]
+# ...
+# visualise these matrices (here only for one)
+heat_plot(Omega_1)
+}
 \references{
 De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 

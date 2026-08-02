@@ -61,7 +61,7 @@ No checking is done on the starting value for the various model matrices, since 
 \examples{
 data(Scenario1_MSFR)
 # initialise parameters according to reference
-init_params <- start_msfr(X_s, B_s, k, j_s)
+init_params <- start_msfa(X_s, B_s, k, j_s)
 EM <- ecm_msfr(X_s, B_s, init_params)
 # common loadings
 Phi <- EM$Phi
