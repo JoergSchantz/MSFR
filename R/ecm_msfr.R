@@ -101,7 +101,7 @@
 #' @examples 
 #' data(Scenario1_MSFR)
 #' # initialise parameters according to reference
-#' init_params <- start_msfr(X_s, B_s, k, j_s)
+#' init_params <- start_msfa(X_s, B_s, k, j_s)
 #' EM <- ecm_msfr(X_s, B_s, init_params)
 #' # common loadings
 #' Phi <- EM$Phi
@@ -308,7 +308,6 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
   }
   
   # AIC and BIC computation ----
-
   if (constraint == "block_lower1") npar <- p * S + k * (p - ( k - 1) / 2) +  sum(j_s * (p - k - (j_s - 1) / 2))
   if (constraint == "block_lower2")  npar <- p * S + k * (p - ( k - 1) / 2) +  sum(j_s * (p  - (j_s - 1) / 2))
   n_tot <- sum(n_s)

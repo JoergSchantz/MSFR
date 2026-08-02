@@ -25,13 +25,23 @@
 #' \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 #' \item{\code{npar}}{number of model parameters.}
 #' \item{iter}{the number of ECM iterations performed.}
-#' @export
 #' @import robust psych stats
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' Multivariate Analysis, 84, 145-172.
-ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, robust = FALSE, corr = TRUE, mcd = FALSE, trace = TRUE, traceIT = 1000)
-{
+#' @examples 
+#' data(Scenario1_MSFR)
+#' EM <- ecm_msfa(X_s, k)
+#' # estimated model matrices
+#' Omega_1 <- EM$Omega_s[[1]]
+#' # ...
+#' # study-specific error matrices
+#' Psi_1 <- EM$Psi_s[[1]]
+#' # ...
+#' # visualise these matrices (here only for one)
+#' heat_plot(Omega_1)
+#' @export
+ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, robust = FALSE, corr = TRUE, mcd = FALSE, trace = TRUE, traceIT = 1000) {
   Omega_s <- list()
   Psi_s <- psi_s <- list()
   #######
