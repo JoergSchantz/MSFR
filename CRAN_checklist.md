@@ -27,3 +27,8 @@
 - [ ] Add the test coverage badge to your README with `usethis::use_github_actions_badge('test-coverage')`
 - [ ] Add a News page using `usethis::use_news_md()`
 - [ ] Don't forget to regularly commit your changes and push them to GitHub: `git add .`, `git commit -m 'commit message'`, and `git push`
+
+
+### Next meeting
+- method == "fa" in start_msfa and start_fr both technically need more inputs for ecm_fa to be fully customisable, currently not implemented.
+- heat_plot overwrites colnames and forces X1, X2 as variables names?
