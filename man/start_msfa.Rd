@@ -4,20 +4,15 @@
 \alias{start_msfa}
 \title{Provides some starting values for the parameters of a MSFA model}
 \usage{
-start_msfa(
-  X_s,
-  B_s,
-  p_b,
-  k,
-  j_s,
-  constraint = "block_lower2",
-  method = "adhoc"
-)
+start_msfa(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
 }
 \arguments{
 \item{X_s}{List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
 Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
 No standardization is carried out by the function.}
+
+\item{B_s}{List of length \eqn{S}{S}, corresponding to the number of different studies considered.
+Each element of the list contains a data matrix with known covariates or batch size idicators etc.}
 
 \item{k}{Number of common factors.}
 
@@ -31,18 +26,9 @@ number of variables.}
 \item{method}{Which method should be used to find the starting values? The two possibilities are \code{"adhoc"} for
 the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 Default is \code{"adhoc"}.}
-
-\item{robust}{If \code{TRUE}, robust covariance matrix is used in place of the sample covariance. Default
-is \code{FALSE}.}
-
-\item{corr}{If \code{TRUE}, the analysis will employ the correlation matrix instead of the covariance matrix.}
-
-\item{mcd}{If \code{TRUE}, the robust estimator used for the covariance is the same proposed in Pison et al. (2003),
-otherwise the default value of the function \code{CovRob} of the \code{robust} library is employed. Default is
-\code{FALSE}.}
 }
 \value{
-A list  containing  \code{Phi},\code{Lambda_s} and  \code{psi_s}, starting values for the model matrices.
+A list  containing  \code{Phi},\code{Lambda_s}, \code{psi_s} and \code{beta} starting values for the model matrices.
 }
 \description{
 This is a supporting function for \code{ecm_msfa}. The method employed is documented in the reference.

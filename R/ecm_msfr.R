@@ -72,6 +72,8 @@
 #' since a suitable value for them  is produced by the function \code{start_msfa}.
 #' @param X_s List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
 #' Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
+#' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
+#' Each element of the list contains a data matrix with known covariates or batch size idicators etc. 
 #' @param start A list containing the slots \code{Phi}, \code{Lambda_s} and \code{Psi_s}, containing the starting
 #' values for the matrix  \code{Phi} of common factor loadings, of size \eqn{P \times K}{P x K}, for
 #' the matrices \code{Lambda_s} of study-specific factor loadings, a list of size \eqn{S}{S}  where each element
@@ -84,12 +86,6 @@
 #' corresponds to the main proposal of De Vito et al. (2018). An alternative identification
 #' strategy is triggered by  "block_lower1"; this is more restrictive but may work also with smaller
 #' number of variables. Again, the latter strategy is mentioned in De Vito et al. (2018).
-#' @param robust If \code{TRUE}, robust covariance matrix is used in place of the sample covariance. Default
-#' is \code{FALSE}.
-#' @param corr If \code{TRUE}, the analysis will employ the correlation matrix instead of the covariance matrix.
-#' @param mcd If \code{TRUE}, the robust estimator used for the covariance is the same proposed in Pison et al. (2003),
-#' otherwise the default value of the function \code{CovRob} of the \code{robust} library is employed. Default is
-#' \code{FALSE}.
 #' @param trace If \code{TRUE} then trace information is being printed every 1000 iterations of the ECM algorithm.
 #' @return A list  containing the following components:
 #' \item{\code{Phi},\code{Lambda_s}, \code{psi_s}}{the estimated model matrices.}

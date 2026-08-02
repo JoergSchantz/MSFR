@@ -8,7 +8,7 @@
 #' Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
 #' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
 #' Each element of the list contains a data matrix with known covariates or batch size idicators etc. 
-#' @param start
+#' @param start initialised parameters i.e. output from \code{start_fr()}
 #' @param nIt Maximum number of iterations for the ECM algorithm. Default is 50000.
 #' @param tol Tolerance for declaring convergence of the ECM algorithm. Default is 10^-7.
 #' @param block_lower Should the upper-triangular zero constraint be enforced? Default is \code{TRUE}

@@ -19,7 +19,7 @@
 #' the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 #' Default is \code{"adhoc"}.
 #' @return A list  containing  \code{Phi},\code{Lambda_s}, \code{psi_s} and \code{beta} starting values for the model matrices.
-#' @import psych
+#' @import psych stats
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 start_msfa <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")

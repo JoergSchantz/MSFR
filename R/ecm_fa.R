@@ -26,7 +26,7 @@
 #' \item{\code{npar}}{number of model parameters.}
 #' \item{iter}{the number of ECM iterations performed.}
 #' @export
-#' @import robust psych
+#' @import robust psych stats
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' Multivariate Analysis, 84, 145-172.
@@ -43,8 +43,8 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
   ######1st round of cycle
   for(s in 1:S){
     n_s[s] <-  dim(X_s[[s]])[[1]]
-    if((!robust) & (!corr)) cov_s[[s]] <- cov(X_s[[s]])
-    if((!robust) & corr) cov_s[[s]] <- cor(X_s[[s]])
+    if((!robust) & (!corr)) cov_s[[s]] <- stats::cov(X_s[[s]])
+    if((!robust) & corr) cov_s[[s]] <- stats::cor(X_s[[s]])
     if(robust & mcd) cov_s[[s]] <- robust::covRob(X_s[[s]], estim = "mcd", quan = .75, ntrial = 1000, corr = corr)$cov
     if(robust & (!mcd)) cov_s[[s]] <- robust::covRob(X_s[[s]], corr = corr)$cov
     FA.s <- stats::factanal(X_s[[s]], factors = tot_s[[s]], covmat = cov_s[[s]],  n.obs=nrow(X_s[[s]]), rotation = "none")

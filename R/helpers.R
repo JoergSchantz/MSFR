@@ -32,95 +32,11 @@
 #' and skip an O(p^2) allocation entirely. See .wb_identity()'s docs.
 .inv_Psi_vec <- function( Psi ) 1 / diag( Psi )
 
-# just keeping it for the moment
-#' @keywords internal
-.Exp_values <- function(
-  Phi, 
-  Lambda_s, 
-  Psi_s, 
-  cov_s, 
-  X_s_tilde, 
-  getdet = FALSE
-)
-{
-  k <- dim(Phi)[2]
-  I_k <- diag(1, k)
-  S <- length(Lambda_s)
-  
-  ###defining objects
-  j_s <- numeric(S)
-  I_j <- list()
-  Sig_s <- list()
-  ds_s <- list()
-  delta_Lambda <- list()
-  delta_Phi <- list()
-  Delta_Lambda <- list()
-  Delta_Phi <- list()
-  Covfcfs <- list()
-  Txsfs <- list()
-  Txsfcs <- list()
-  Tfsfs <- list()
-  Tfcsfcs <- list()
-  Tfcsfs <- list()
-  wb1_f <- list()
-  wb1_l <- list()
-  E_fis_x_is <- list()
-  E_lis_x_is <- list()
-  
-  for (s in 1:S){
-    ds_s[[s]] <- NULL
-    j_s[s] <- c( dim( Lambda_s[[s]] )[[2]] )
-    I_j[[s]] <- diag( 1, j_s[s] )
-    Sig_s[[s]] <- tcrossprod( Phi ) + tcrossprod( Lambda_s[[s]] ) + Psi_s[[s]]
-    if (getdet) { ds_s[[s]] <- det( Sig_s[[s]] ) }
-    # ----
-    ##new part for beta
-    inv_Psi_s <- .inv_Psi( Psi_s[[s]] ) 
-    wb1_f[[s]] <- inv_Psi_s - inv_Psi_s %*% Lambda_s[[s]] %*% .wb_identity( Lambda_s[[s]], inv_Psi_s, I_j[[s]] )
-    wb1_l[[s]] <- inv_Psi_s - inv_Psi_s %*% Phi %*% .wb_identity( Phi, inv_Psi_s, I_k ) 
-    delta_Phi[[s]] <- .wb_identity( Phi, wb1_f[[s]], I_k ) 
-    delta_Lambda[[s]] <- .wb_identity( Lambda_s[[s]], wb1_l[[s]], I_j[[s]] ) 
-    E_fis_x_is[[s]] <- tcrossprod( delta_Phi[[s]], X_s_tilde[[s]] )
-    E_lis_x_is[[s]] <- tcrossprod( delta_Lambda[[s]], X_s_tilde[[s]] )
-
-    # delta_Lambda[[s]] <- crossprod( Lambda_s[[s]], Sig_s1[[s]] )
-    # delta_Phi[[s]] <- crossprod( Phi, Sig_s1[[st]] )
-
-    # THE FOLLOWING SUBSTITUTIONS HAVE NOT BEEN TESTED YET BUT SEEM REASONABLE ----
-    # Delta_Lambda[[s]] <- I_j[[s]] - (t(Lambda_s[[s]]) %*% Sig_s1[[s]] %*% Lambda_s[[s]])
-    Delta_Lambda[[s]] <- I_j[[s]] - ( delta_Lambda[[s]] %*% Lambda_s[[s]] )
-    # Delta_Phi[[s]] <- I_k - (t(Phi) %*% Sig_s1[[s]] %*% Phi)
-    Delta_Phi[[s]] <- I_k - ( delta_Phi[[s]] %*% Phi )
-    # Covfcfs[[s]] <- -t(Phi) %*% Sig_s1[[s]] %*% Lambda_s[[s]]
-    Covfcfs[[s]] <- -delta_Phi[[s]] %*% Lambda_s[[s]]
-    # Txsfs[[s]] <- cov_s[[s]] %*% t(delta_Lambda[[s]])
-    Txsfs[[s]] <- tcrossprod( cov_s[[s]], delta_Lambda[[s]] )
-    # Txsfcs[[s]] <- cov_s[[s]] %*% t(delta_Phi[[s]])
-    Txsfcs[[s]] <- tcrossprod( cov_s[[s]], delta_Phi[[s]] )
-    # Tfsfs[[s]] <- delta_Lambda[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Delta_Lambda[[s]]
-    Tfsfs[[s]] <- delta_Lambda[[s]] %*% tcrossprod( cov_s[[s]], delta_Lambda[[s]] ) + Delta_Lambda[[s]]
-    # Tfcsfcs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Phi[[s]]) + Delta_Phi[[s]]
-    Tfcsfcs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Phi[[s]] ) + Delta_Phi[[s]]
-    # Tfcsfs[[s]] <- delta_Phi[[s]] %*% cov_s[[s]] %*% t(delta_Lambda[[s]]) + Covfcfs[[s]]
-    Tfcsfs[[s]] <- delta_Phi[[s]] %*% tcrossprod( cov_s[[s]], delta_Lambda[[s]] ) + Covfcfs[[s]]
-    # ----
-  }
-  return(list(Txsfs = Txsfs, Txsfcs = Txsfcs, Tfsfs = Tfsfs,
-              Tfcsfcs =  Tfcsfcs, Tfcsfs = Tfcsfs, 
-              E_fis_x_is = E_fis_x_is, E_lis_x_is = E_lis_x_is, 
-              ds_s=ds_s))
-}
-
-
 #' @keywords internal
 .loglik_ecm <- function( Sig_s1, ds_s, n_s, cov_s )
 {
   S <- length( n_s )
   #####log likelihood value for each study
-  # val_s <- c()
-  # for(s in 1:S){
-  #   val_s[s] <- - (n_s[s]/2) * log(ds_s[[s]]) - (n_s[s]/2) * .tr(Sig_s1[[s]] %*% cov_s[[s]])
-  # }
   val_s <- sapply(
     1:S,
     function( s ) {

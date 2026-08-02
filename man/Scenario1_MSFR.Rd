@@ -3,7 +3,7 @@
 \docType{data}
 \name{Scenario1_MSFR}
 \alias{Scenario1_MSFR}
-\title{Minimal multi study factor scenario}
+\title{Minimal multi study scenario}
 \format{
 5 indiviudally loaded variables as described above
 }

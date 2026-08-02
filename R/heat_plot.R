@@ -36,12 +36,17 @@
 #' "data_immune"
 #' Generate heatmap of matrices
 #' @param Matrix matrix to plot
-#' @param limit limit for the values of the plot
-#' @export
+#' @param limit limit for the values of the plot, default is \code{c(-2,2)}
+#' @param Xlab x-axis label, default is \code{""}
+#' @param Ylab y-axis label, default is \code{""}
+#' @importFrom reshape2 melt
+#' @import ggplot2
 #' @examples
 #' sigma = matrix(rbinom(25,1,.30), 5, 5)
 #' plot.heat(sigma)
-plot.heat <- function(Matrix,Xlab="",Ylab="",limit=c(-2,2)){
+#' 
+#' @export
+heat_plot <- function(Matrix,Xlab="",Ylab="",limit=c(-2,2)){
   Matrix = as.matrix(Matrix)
   colnames(Matrix)<-NULL
   rownames(Matrix)<-NULL

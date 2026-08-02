@@ -1,4 +1,4 @@
-#' Minimal multi study factor scenario
+#' Minimal multi study scenario
 #'
 #' \itemize{
 #'   \item B_s. List of matrices 

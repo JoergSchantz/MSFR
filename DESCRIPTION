@@ -21,4 +21,6 @@ Imports:
     pracma,
     psych,
     robust,
-    statmod
+    statmod,
+    ggplot2,
+    reshape2

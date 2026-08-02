@@ -11,6 +11,7 @@
 #' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
 #' Each element of the list contains a data matrix with known covariates or batch size idicators etc. 
 #' @param k Number of common factors.
+#' @param j_s Number of study-specific factors. A vector of positive integers of length \eqn{S}{S}.
 #' @param constraint  Constraint for ensuring identifiability. The default is "block_lower2", which
 #' corresponds to the main proposal of De Vito et al. (2018). An alternative identification
 #' strategy is triggered by  "block_lower1"; this is more restrictive but may work also with smaller
@@ -19,10 +20,10 @@
 #' the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 #' Default is \code{"adhoc"}.
 #' @return A list  containing  \code{Phi},\code{psi_s} and  \code{beta}, starting values for the model matrices.
-#' @import psych
+#' @import psych stats
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
-start_fr <- function(X_s, B_s, k, constraint = "block_lower2", method = "adhoc")
+start_fr <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
 {
   S <- length(X_s)
   X <- Reduce('rbind', X_s)  

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ecm_fr.R
 \name{ecm_fr}
 \alias{ecm_fr}
-\title{Estimates the parameters of study-specific FA models}
+\title{Estimates the parameters of study-specific FR models}
 \usage{
 ecm_fr(
   X_s,
@@ -21,6 +21,11 @@ ecm_fr(
 \item{X_s}{List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
 Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.}
 
+\item{B_s}{List of length \eqn{S}{S}, corresponding to the number of different studies considered.
+Each element of the list contains a data matrix with known covariates or batch size idicators etc.}
+
+\item{start}{initialised parameters i.e. output from \code{start_fr()}}
+
 \item{nIt}{Maximum number of iterations for the ECM algorithm. Default is 50000.}
 
 \item{tol}{Tolerance for declaring convergence of the ECM algorithm. Default is 10^-7.}
@@ -38,10 +43,6 @@ otherwise the default value of the function \code{CovRob} of the \code{robust} l
 \code{FALSE}.}
 
 \item{trace}{If \code{TRUE} then trace information is being printed every \code{traceIT} iterations of the ECM algorithm.}
-
-\item{tot_s}{Number of latent factors for each study. A vector of positive integers of length \eqn{S}{S}.}
-
-\item{traceIT}{Frequency of tracing information.}
 }
 \value{
 A list  containing the following components:
@@ -52,9 +53,9 @@ A list  containing the following components:
 \item{iter}{the number of ECM iterations performed.}
 }
 \description{
-Maximum likelihood estimation of study-specific FA models parameters via the ECM
+Maximum likelihood estimation of study-specific FR models parameters via the ECM
 algorithm, adopting the upper-triangular zero constraint to achieve identification
-for each loading matrix. Note: the function can also estimate a FA model for a single
+for each loading matrix. Note: the function can also estimate a FR model for a single
 study, by specifiyng \code{X_s = list(data)}, where \code{data} is the data matrix.
 }
 \references{
