@@ -24,7 +24,7 @@ simulate_msfr_data <- function(seed, p = 10, S = 2, k = 2, j_s = c(1, 1),
     B %*% t(true_beta) + Fc %*% t(true_Phi) + Fs %*% t(Lam) + E
   }, B_s, true_Lambda, true_psi, n_s)
 
-  list(X_s = X_s, B_s = B_s, p = p, S = S, k = k, j_s = j_s, p_b = p_b, n_s = n_s,
+  list(X_s = X_s, B_s = B_s, p = p, S = S, k = k, j_s = j_s, n_s = n_s,
        true_Phi = true_Phi, true_Lambda = true_Lambda, true_beta = true_beta,
        true_psi = true_psi)
 }
@@ -79,7 +79,7 @@ test_that(
   "ecm_msfr() recovers simulated Phi/Lambda_s/beta/Psi_s reasonably well", 
   {
   d <- simulate_msfr_data(seed = 5)
-  start <- start_msfa(d$X_s, d$B_s, p_b = d$p_b, k = d$k, j_s = d$j_s,
+  start <- start_msfa(d$X_s, d$B_s, k = d$k, j_s = d$j_s,
                        constraint = "block_lower2")
 
   res <- ecm_msfr(d$X_s, d$B_s, start, nIt = 500, tol = 1e-7, trace = FALSE)
@@ -109,7 +109,7 @@ test_that(
   # computed as *_new every iteration but never carried forward into the variable the
   # next iteration's E-step actually reads, so it silently never changes.
   d <- simulate_msfr_data(seed = 7)
-  start <- start_msfa(d$X_s, d$B_s, p_b = d$p_b, k = d$k, j_s = d$j_s,
+  start <- start_msfa(d$X_s, d$B_s, k = d$k, j_s = d$j_s,
                        constraint = "block_lower2")
 
   res <- ecm_msfr(d$X_s, d$B_s, start, nIt = 25, tol = 1e-12, trace = FALSE)

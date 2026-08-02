@@ -65,11 +65,8 @@
 #' Maximum likelihood estimation of the MSFR model parameters via the ECM
 #' algorithm.
 #'
-#' There are two different constraints for achieving model identification,
-#' as detailed in the reference,
-#' though the function can also be run without such constraints (not recommended).
-#' No checking is done on the starting value for the various model matrices,
-#' since a suitable value for them  is produced by the function \code{start_msfa}.
+#' There are two different constraints for achieving model identification, as detailed in the reference, though the function can also be run without such constraints (not recommended).
+#' No checking is done on the starting value for the various model matrices, since a suitable value for them  is produced by the function \code{start_msfr}.
 #' @param X_s List of lenght \eqn{S}{S}, corresponding to number of different studies considered.
 #' Each element of the list contains a data matrix, with the same number of columns \eqn{P}{P} for all the studies.
 #' @param B_s List of length \eqn{S}{S}, corresponding to the number of different studies considered. 
@@ -88,21 +85,38 @@
 #' number of variables. Again, the latter strategy is mentioned in De Vito et al. (2018).
 #' @param trace If \code{TRUE} then trace information is being printed every 1000 iterations of the ECM algorithm.
 #' @return A list  containing the following components:
-#' \item{\code{Phi},\code{Lambda_s}, \code{psi_s}}{the estimated model matrices.}
+#' \item{\code{Phi},\code{Lambda_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
 #' \item{loglik}{the value of the log likelihood function at the final estimates.}
 #' \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 #' \item{\code{npar}}{number of model parameters.}
 #' \item{iter}{the number of ECM iterations performed.}
+#' \item{cov_s}{list of covariances per study}
+#' \item{n_s}{list of observations per study}
 #' \item{constraint}{the identification constraint enforced.}
-#' @export
 #' @import robust
 #' @importFrom stats cor cov factanal prcomp
 #' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2018). (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' of Multivariate Analysis, 84, 145-172.
-ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, 
-                     constraint = "block_lower2", trace = TRUE)
-{
+#' @examples 
+#' data(Scenario1_MSFR)
+#' # initialise parameters according to reference
+#' init_params <- start_msfr(X_s, B_s, k, j_s)
+#' EM <- ecm_msfr(X_s, B_s, init_params)
+#' # common loadings
+#' Phi <- EM$Phi
+#' # study-specific loadings 
+#' Lambda_1 <- EM$Lambda_s[[1]]
+#' Lambda_2 <- EM$Lambda_s[[2]]
+#' # estimated regression coefficients 
+#' beta <- EM$beta
+#' # study-specific error matrices
+#' Psi_1 <- EM$Psi_s[[1]]
+#' Psi_2 <- EM$Psi_s[[2]]
+#' # visualise these matrices (here only for one)
+#' heat_plot(Phi)
+#' @export
+ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "block_lower2", trace = TRUE) {
   S <- length(X_s)
   ####### extract elements from input list 'start'
   Phi <- start$Phi
@@ -110,7 +124,6 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   psi_s <- start$psi_s
   beta <- start$beta
 
-  
   # get some basic variables needed for computation
   j_s <- n_s <- numeric(S)
   p <- dim(Phi)[1]
@@ -303,7 +316,7 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7,
   BIC <- -2 * l1 + npar * log(n_tot)
 
   # return output ----
-  res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, psi_s = psi_s, loglik = l1,
+  res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, Psi_s = psi_s, loglik = l1,
               AIC = AIC, BIC = BIC, npar=npar,
               iter = i,  cov_s = cov_s,  n_s = n_s, constraint=constraint)
   # write.csv2(l.df, "likelihoods_no253.csv")

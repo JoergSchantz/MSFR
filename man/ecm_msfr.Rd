@@ -41,11 +41,13 @@ number of variables. Again, the latter strategy is mentioned in De Vito et al. (
 }
 \value{
 A list  containing the following components:
-\item{\code{Phi},\code{Lambda_s}, \code{psi_s}}{the estimated model matrices.}
+\item{\code{Phi},\code{Lambda_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
 \item{loglik}{the value of the log likelihood function at the final estimates.}
 \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 \item{\code{npar}}{number of model parameters.}
 \item{iter}{the number of ECM iterations performed.}
+\item{cov_s}{list of covariances per study}
+\item{n_s}{list of observations per study}
 \item{constraint}{the identification constraint enforced.}
 }
 \description{
@@ -53,11 +55,26 @@ Maximum likelihood estimation of the MSFR model parameters via the ECM
 algorithm.
 }
 \details{
-There are two different constraints for achieving model identification,
-as detailed in the reference,
-though the function can also be run without such constraints (not recommended).
-No checking is done on the starting value for the various model matrices,
-since a suitable value for them  is produced by the function \code{start_msfa}.
+There are two different constraints for achieving model identification, as detailed in the reference, though the function can also be run without such constraints (not recommended).
+No checking is done on the starting value for the various model matrices, since a suitable value for them  is produced by the function \code{start_msfr}.
+}
+\examples{
+data(Scenario1_MSFR)
+# initialise parameters according to reference
+init_params <- start_msfr(X_s, B_s, k, j_s)
+EM <- ecm_msfr(X_s, B_s, init_params)
+# common loadings
+Phi <- EM$Phi
+# study-specific loadings 
+Lambda_1 <- EM$Lambda_s[[1]]
+Lambda_2 <- EM$Lambda_s[[2]]
+# estimated regression coefficients 
+beta <- EM$beta
+# study-specific error matrices
+Psi_1 <- EM$Psi_s[[1]]
+Psi_2 <- EM$Psi_s[[2]]
+# visualise these matrices (here only for one)
+heat_plot(Phi)
 }
 \references{
 De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2018). (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
