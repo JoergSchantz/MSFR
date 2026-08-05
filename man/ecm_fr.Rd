@@ -2,7 +2,7 @@
 % Please edit documentation in R/ecm_fr.R
 \name{ecm_fr}
 \alias{ecm_fr}
-\title{Estimates the parameters of study-specific FR models}
+\title{Estimates the parameters of study-specific Factor Regression (FR) models}
 \usage{
 ecm_fr(
   X_s,
@@ -73,7 +73,7 @@ Psi_1 <- EM$Psi_s[[1]]
 heat_plot(Phi_1)
 }
 \references{
-De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
+Avalos-Pacheco, A., Rossel, D. and Savage, R., S. (2022). Heterogeneous Large Datasets Integration Using Bayesian Factor Regression. Bayesian Analysis, 7, 33-66.
 
 Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 Multivariate Analysis, 84, 145-172.

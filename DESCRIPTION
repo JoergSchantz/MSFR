@@ -3,9 +3,9 @@ Title: Multi-Study Factor Regression Model
 Version: 0.0.0.9000
 Authors@R:
     c(
-    person("Roberta", "De Vito", ,"roberta_devito@brown.edu", role = "aut"),
-    person("Alejandra", "Avalos-Pacheco", ,"alejandra.avalos_pacheco@jku.at",role = "cre"),
-    person("Jörg", "Schantz", role = "ctb")
+        person("Roberta", "De Vito", ,"roberta_devito@brown.edu", role = "aut"),
+        person("Alejandra", "Avalos-Pacheco", ,"alejandra.avalos_pacheco@jku.at",role = "cre"),
+        person("Jörg", "Schantz", role = "ctb")
     )
 Description: Diet is a risk factor for many diseases. In nutritional epidemiology, studying reproducible dietary patterns is critical to reveal important associations with health. However, this task is challenging: diverse cultural and ethnic backgrounds may critically impact eating patterns by showing heterogeneity, leading to incorrect dietary patterns and obscuring the components shared across different groups or populations. Moreover, covariate effects generated from observed variables, such as demographics and other confounders, can further bias these dietary patterns. Identifying the shared and group-specific dietary components and covariate effects is essential to drive accurate conclusions. To address these issues, we introduce a new modeling factor regression, the Multistudy Factor Regression (MSFR) model. The MSFR model analyzes different populations simultaneously, achieving three goals: capturing shared component(s) across populations, identifying group-specific structures, and correcting for covariate effects. We use this novel method to derive common and ethnic-specific dietary patterns in a multicenter epidemiological study in His- panic/Latinos community. Our model improves the accuracy of common and group dietary signals, provides a robust estimation of factor cardinality, and yields better prediction than other techniques, revealing important associations with health and cardio- vascular disease. In summary, we provide a tool to integrate different groups, providing accurate dietary signals crucial to inform public health policy.
 License: MIT + file LICENSE

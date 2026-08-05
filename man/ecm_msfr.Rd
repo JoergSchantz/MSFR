@@ -46,8 +46,8 @@ A list  containing the following components:
 \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 \item{\code{npar}}{number of model parameters.}
 \item{iter}{the number of ECM iterations performed.}
-\item{cov_s}{list of covariances per study}
-\item{n_s}{list of observations per study}
+\item{cov_s}{list of covariances per study.}
+\item{n_s}{list of observations per study.}
 \item{constraint}{the identification constraint enforced.}
 }
 \description{
@@ -56,7 +56,7 @@ algorithm.
 }
 \details{
 There are two different constraints for achieving model identification, as detailed in the reference, though the function can also be run without such constraints (not recommended).
-No checking is done on the starting value for the various model matrices, since a suitable value for them  is produced by the function \code{start_msfr}.
+No checking is done on the starting value for the various model matrices, since a suitable value for them  is produced by the function \code{start_msfa}.
 }
 \examples{
 data(Scenario1_MSFR)
@@ -77,6 +77,10 @@ Psi_2 <- EM$Psi_s[[2]]
 heat_plot(Phi)
 }
 \references{
+De Vito, R. and Avalos-Pacheco, A. (2025). Multi-Study Factor Regression: An Application in Nutritional Epidemiology. Statisitcs in Medicine.
+
+Avalos-Pacheco, A., Rossel, D. and Savage, R., S. (2022). Heterogeneous Large Datasets Integration Using Bayesian Factor Regression. Bayesian Analysis, 7, 33-66.
+
 De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2018). (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 
 Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal

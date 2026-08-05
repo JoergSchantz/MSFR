@@ -1,4 +1,4 @@
-#' Estimates the parameters of study-specific FR models
+#' Estimates the parameters of study-specific Factor Regression (FR) models
 #'
 #' Maximum likelihood estimation of study-specific FR models parameters via the ECM
 #' algorithm, adopting the upper-triangular zero constraint to achieve identification
@@ -21,7 +21,7 @@
 #' \code{FALSE}.
 #' @param trace If \code{TRUE} then trace information is being printed every \code{traceIT} iterations of the ECM algorithm.
 #' @import robust psych
-#' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
+#' @references Avalos-Pacheco, A., Rossel, D. and Savage, R., S. (2022). Heterogeneous Large Datasets Integration Using Bayesian Factor Regression. Bayesian Analysis, 7, 33-66.
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' Multivariate Analysis, 84, 145-172.
 #' @return A list  containing the following components:
