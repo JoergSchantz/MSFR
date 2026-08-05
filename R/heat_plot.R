@@ -43,7 +43,7 @@
 #' @import ggplot2
 #' @examples
 #' sigma = matrix(rbinom(25,1,.30), 5, 5)
-#' plot.heat(sigma)
+#' heat_plot(sigma)
 #' 
 #' @export
 heat_plot <- function(Matrix,Xlab="",Ylab="",limit=c(-2,2)){

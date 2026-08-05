@@ -52,6 +52,6 @@ data_immune <- list(GSE98, GSE20)}
 data_immune
 # Generate heatmap of matrices
 sigma = matrix(rbinom(25,1,.30), 5, 5)
-plot.heat(sigma)
+heat_plot(sigma)
 
 }
