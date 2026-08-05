@@ -20,17 +20,30 @@
 #' otherwise the default value of the function \code{CovRob} of the \code{robust} library is employed. Default is
 #' \code{FALSE}.
 #' @param trace If \code{TRUE} then trace information is being printed every \code{traceIT} iterations of the ECM algorithm.
+#' @import robust psych
+#' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
+#' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
+#' Multivariate Analysis, 84, 145-172.
 #' @return A list  containing the following components:
 #' \item{\code{Omega_s}, \code{Psi_s}}{the estimated model matrices.}
 #' \item{loglik}{the value of the log likelihood function at the final estimates.}
 #' \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 #' \item{\code{npar}}{number of model parameters.}
 #' \item{iter}{the number of ECM iterations performed.}
+#' @examples 
+#' data(Scenario1_MSFR)
+#' EM <- ecm_fr(X_s, B_S)
+#' # estimated study-specific model matrices
+#' Phi_1 <- EM$Phi_s[[1]]
+#' # ...
+#' # regression matrix
+#' beta <- EM$beta
+#' # study-specific error matrices
+#' Psi_1 <- EM$Psi_s[[1]]
+#' # ...
+#' # visualise these matrices (here only for one)
+#' heat_plot(Phi_1)
 #' @export
-#' @import robust psych
-#' @references De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
-#' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
-#' Multivariate Analysis, 84, 145-172.
 ecm_fr <- function( 
   X_s,
   B_s,

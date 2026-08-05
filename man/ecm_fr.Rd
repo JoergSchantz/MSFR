@@ -58,6 +58,20 @@ algorithm, adopting the upper-triangular zero constraint to achieve identificati
 for each loading matrix. Note: the function can also estimate a FR model for a single
 study, by specifiyng \code{X_s = list(data)}, where \code{data} is the data matrix.
 }
+\examples{
+data(Scenario1_MSFR)
+EM <- ecm_fr(X_s, B_S)
+# estimated study-specific model matrices
+Phi_1 <- EM$Phi_s[[1]]
+# ...
+# regression matrix
+beta <- EM$beta
+# study-specific error matrices
+Psi_1 <- EM$Psi_s[[1]]
+# ...
+# visualise these matrices (here only for one)
+heat_plot(Phi_1)
+}
 \references{
 De Vito, R., Bellio, R., Trippa, L. and Parmigiani, G. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
 
