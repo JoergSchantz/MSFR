@@ -17,7 +17,7 @@
 - [x] Document your package dependencies with either `usethis::use_package('package_name', min_version = TRUE)` or `usethis::use_import_from('package_name', 'function_name')`
 - [x] Include a Citation File with `cffr::cff_write()`
 - [x] Add a README file with `usethis::use_readme_rmd()`
-- [ ] Edit the README, and render the .Rmd file with `devtools::build_readme()`
+- [x] Edit the README, and render the .Rmd file with `devtools::build_readme()`
 - [ ] Add the R CMD check GitHub action with `usethis::use_github_action('check-standard')`
 - [ ] Add a vignette, such as `usethis::use_vignette('package_pal')`. Edit the .Rmd file, then preview using `devtools::build_rmd('vignettes/package_pal.Rmd')`
 - [ ] Configure your package for pkgdown with `usethis::use_pkgdown()`
@@ -32,3 +32,4 @@
 ### Next meeting
 - method == "fa" in start_msfa and start_fr both technically need more inputs for ecm_fa to be fully customisable, currently not implemented.
 - heat_plot overwrites colnames and forces X1, X2 as variables names?
+- link in README not viable
