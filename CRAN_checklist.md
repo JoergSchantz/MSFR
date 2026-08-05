@@ -15,7 +15,7 @@
 - [x] Add a package-level help page with `usethis::use_package_doc()`
 - [ ] Run `devtools::check()` from time to time
 - [x] Document your package dependencies with either `usethis::use_package('package_name', min_version = TRUE)` or `usethis::use_import_from('package_name', 'function_name')`
-- [ ] Include a Citation File with `cffr::cff_write()`
+- [x] Include a Citation File with `cffr::cff_write()`
 - [x] Add a README file with `usethis::use_readme_rmd()`
 - [ ] Edit the README, and render the .Rmd file with `devtools::build_readme()`
 - [ ] Add the R CMD check GitHub action with `usethis::use_github_action('check-standard')`

@@ -23,7 +23,7 @@ A data set used by De Vito et al. (2019) as an illustrative example.
 }
 \examples{
 \dontrun{
-The commands below show how the dataset was obtained from libraries on the Bioconductor repository.
+# The commands below show how the dataset was obtained from libraries on the Bioconductor repository.
 source("http://bioconductor.org/biocLite.R")
 biocLite(c("limma", "curatedOvarianData", "RTCGAToolbox"), suppressUpdates=TRUE)
 library(curatedOvarianData)
@@ -49,8 +49,8 @@ mat2 <- matrix(sapply(1:leD, function(i) which(colnames(GSE98_eset)==im_response
 GSE20 <- matrix(c(GSE20_eset[,mat1]), 140, leD)
 GSE98 <-matrix(c(GSE98_eset[,mat2]), 285, leD)
 data_immune <- list(GSE98, GSE20)}
-"data_immune"
-Generate heatmap of matrices
+data_immune
+# Generate heatmap of matrices
 sigma = matrix(rbinom(25,1,.30), 5, 5)
 plot.heat(sigma)
 

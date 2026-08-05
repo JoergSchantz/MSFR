@@ -7,7 +7,7 @@
 #' @format A list of two matrices, each with 63 columns and 285 and 140 rows, respectively.
 #' @examples
 #' \dontrun{
-#' The commands below show how the dataset was obtained from libraries on the Bioconductor repository.
+#' # The commands below show how the dataset was obtained from libraries on the Bioconductor repository.
 #' source("http://bioconductor.org/biocLite.R")
 #' biocLite(c("limma", "curatedOvarianData", "RTCGAToolbox"), suppressUpdates=TRUE)
 #' library(curatedOvarianData)
@@ -33,8 +33,8 @@
 #' GSE20 <- matrix(c(GSE20_eset[,mat1]), 140, leD)
 #' GSE98 <-matrix(c(GSE98_eset[,mat2]), 285, leD)
 #' data_immune <- list(GSE98, GSE20)}
-#' "data_immune"
-#' Generate heatmap of matrices
+#' data_immune
+#' # Generate heatmap of matrices
 #' @param Matrix matrix to plot
 #' @param limit limit for the values of the plot, default is \code{c(-2,2)}
 #' @param Xlab x-axis label, default is \code{""}
