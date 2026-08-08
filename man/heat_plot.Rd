@@ -23,7 +23,8 @@ A data set used by De Vito et al. (2019) as an illustrative example.
 }
 \examples{
 \dontrun{
-# The commands below show how the dataset was obtained from libraries on the Bioconductor repository.
+# The commands below show how the dataset was obtained from libraries on the Bioconductor 
+# repository.
 source("http://bioconductor.org/biocLite.R")
 biocLite(c("limma", "curatedOvarianData", "RTCGAToolbox"), suppressUpdates=TRUE)
 library(curatedOvarianData)

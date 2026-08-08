@@ -31,7 +31,7 @@
 #' Multivariate Analysis, 84, 145-172.
 #' @examples 
 #' data(Scenario1_MSFR)
-#' EM <- ecm_msfa(X_s, k)
+#' EM <- ecm_fa(X_s, k)
 #' # estimated model matrices
 #' Omega_1 <- EM$Omega_s[[1]]
 #' # ...
