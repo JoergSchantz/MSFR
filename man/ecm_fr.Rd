@@ -46,7 +46,7 @@ otherwise the default value of the function \code{CovRob} of the \code{robust} l
 }
 \value{
 A list  containing the following components:
-\item{\code{Phi_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
+\item{\code{Phi_s}, \code{Beta} and \code{Psi_s}}{the estimated model matrices.}
 \item{loglik}{the value of the log likelihood function at the final estimates.}
 \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 \item{\code{npar}}{number of model parameters.}
@@ -65,7 +65,7 @@ EM <- ecm_fr(X_s, B_S)
 Phi_1 <- EM$Phi_s[[1]]
 # ...
 # regression matrix
-beta <- EM$beta
+Beta <- EM$Beta
 # study-specific error matrices
 Psi_1 <- EM$Psi_s[[1]]
 # ...

@@ -4,7 +4,16 @@
 \alias{start_fr}
 \title{Provides some starting values for the parameters of a FR model}
 \usage{
-start_fr(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
+start_fr(
+  X_s,
+  B_s,
+  k,
+  j_s,
+  constraint = "block_lower2",
+  method = "adhoc",
+  tol = 10^-5,
+  nIt = 5000
+)
 }
 \arguments{
 \item{X_s}{List of lenght \eqn{S}{S}, corresponding to the number of different studies considered.
@@ -26,6 +35,10 @@ number of variables.}
 \item{method}{Which method should be used to find the starting values? The two possibilities are \code{"adhoc"} for
 the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 Default is \code{"adhoc"}.}
+
+\item{tol}{Only needed if \code{method = "fa"}. Tolerance parameter as in \code{ecm_fa()}.}
+
+\item{nIt}{Only needed if \code{method = "fa"}. Number of iterations parameter as in \code{ecm_fa()}.}
 }
 \value{
 A list  containing  \code{Phi},\code{psi_s} and  \code{beta}, starting values for the model matrices.

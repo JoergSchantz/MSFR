@@ -41,7 +41,7 @@ number of variables. Again, the latter strategy is mentioned in De Vito et al. (
 }
 \value{
 A list  containing the following components:
-\item{\code{Phi},\code{Lambda_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
+\item{\code{Phi},\code{Lambda_s}, \code{Beta} and \code{Psi_s}}{the estimated model matrices.}
 \item{loglik}{the value of the log likelihood function at the final estimates.}
 \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 \item{\code{npar}}{number of model parameters.}
@@ -69,7 +69,7 @@ Phi <- EM$Phi
 Lambda_1 <- EM$Lambda_s[[1]]
 Lambda_2 <- EM$Lambda_s[[2]]
 # estimated regression coefficients 
-beta <- EM$beta
+Beta <- EM$Beta
 # study-specific error matrices
 Psi_1 <- EM$Psi_s[[1]]
 Psi_2 <- EM$Psi_s[[2]]
