@@ -60,7 +60,8 @@ study, by specifiyng \code{X_s = list(data)}, where \code{data} is the data matr
 }
 \examples{
 data(Scenario1_MSFR)
-EM <- ecm_fr(X_s, B_S)
+init <- start_fr(X_s, B_s, k, j_s, constraint = "null", method = "adhoc")
+EM <- ecm_fr(X_s, B_s, init)
 # estimated study-specific model matrices
 Phi_1 <- EM$Phi_s[[1]]
 # ...

@@ -32,7 +32,8 @@
 #' \item{iter}{the number of ECM iterations performed.}
 #' @examples 
 #' data(Scenario1_MSFR)
-#' EM <- ecm_fr(X_s, B_S)
+#' init <- start_fr(X_s, B_s, k, j_s, constraint = "null", method = "adhoc")
+#' EM <- ecm_fr(X_s, B_s, init)
 #' # estimated study-specific model matrices
 #' Phi_1 <- EM$Phi_s[[1]]
 #' # ...
