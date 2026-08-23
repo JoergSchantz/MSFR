@@ -19,11 +19,13 @@
 #' @param method Which method should be used to find the starting values? The two possibilities are \code{"adhoc"} for
 #' the method described in De Vito et al. (2016), and \code{"fa"} for averaging over separate study-specific FA models.
 #' Default is \code{"adhoc"}.
+#' @param tol Only needed if \code{method = "fa"}. Tolerance parameter as in \code{ecm_fa()}.
+#' @param nIt Only needed if \code{method = "fa"}. Number of iterations parameter as in \code{ecm_fa()}.
 #' @return A list  containing  \code{Phi},\code{psi_s} and  \code{beta}, starting values for the model matrices.
 #' @import psych stats
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
-start_fr <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
+start_fr <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc", tol = 10^-5, nIt = 5000)
 {
   S <- length(X_s)
   X <- Reduce('rbind', X_s)  
@@ -70,7 +72,7 @@ start_fr <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "ad
   }
   #### it is important to post-process the output for avoiding sign changes
   if(method=="fa"){
-    est <- ecm_fa(X_tilde, tot_s = k, tol = 10^-5, nIt = 5000, trace = FALSE)
+    est <- ecm_fa(X_tilde, tot_s = k + j_s, tol = tol, nIt = nIt, trace = FALSE)
     Phi <- est$Omega_s[[1]][,1:k] / S
     psi_s[[1]] <- est$psi_s[[1]]
     for(s in 2:S){
