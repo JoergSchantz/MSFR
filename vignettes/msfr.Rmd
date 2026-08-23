@@ -1,10 +1,19 @@
 ---
-title: Multi-Study Factor Regression (MSRF)
-author: 
-- Roberta De Vito
-- Alejandra Avalos-Pacheco
-- Jörg Schantz
+title: "msfr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{msfr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
 
 Fit the Multi-Study Factor Regression model via the [ECM algorithm](https://doi.org/10.1002/sim.70108).
 
