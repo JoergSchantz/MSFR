@@ -6,7 +6,7 @@ author:
 - Jörg Schantz
 ---
 
-Fit the Multi-Study Factor Regression model via the [ECM algorithm](#1-fitting-a-msfa-model-via-the-ecm-algorithm).
+Fit the Multi-Study Factor Regression model via the [ECM algorithm](https://arxiv.org/pdf/1611.06350).
 
 ## Fitting the MSFR model via the ECM Algorithm
 
@@ -35,20 +35,28 @@ Now we can proceed for estimating the model parameters via the ECM algorithm
 ECM_MSFR <- ecm_msfr(X_s, B_s, start=start_value,  nIt = 10000, trace = FALSE)
 ```
 
-The estimated matrix of common loadings can be visualized
+The estimated matrix of common loadings
 ```{r get common, eval = FALSE}
 Phi <- ECM_MSFR$Phi
 ```
 
-The estimated matrix of study-specific loadings can be visualized
+The estimated matrix of study-specific loadings
 ```{r get spec, eval = FALSE}
 Lambda_1 <- ECM_MSFR$Lambda_s[[1]]
 Lambda_2 <- ECM_MSFR$Lambda_s[[2]]
 ```
 
+The estimated idiosyncratic error matrices
+
+```{r get errors, eval = FALSE}
+Psi_1 <- ECM_MSFR$Psi_s[[1]]
+Psi_2 <- ECM_MSFR$Psi_s[[2]]
+```
+
+
 The estimated matrix of regression coefficients for covariates effect can be visualized
 ```{r get cov, eval = FALSE}
-beta <- ECM_MSFR$beta
+Beta <- ECM_MSFR$Beta
 ```
 
 ### Visualisation of the each output matrices
@@ -56,5 +64,7 @@ beta <- ECM_MSFR$beta
 heat_plot(Phi)
 heat_plot(Lambda_1)
 heat_plot(Lambda_2)
-heat_plot(beta)
+heat_plot(Psi_1)
+heat_plot(Psi_2)
+heat_plot(Beta)
 ```
