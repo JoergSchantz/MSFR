@@ -35,8 +35,7 @@
 }
 
 #'@keywords internal
-.update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j ) {
-  p  <- dim(Phi)[1]
+.update_Lambda <- function( Phi, exp_xl, exp_fl, exp_ll, j, p ) {
   A_ <- Phi %*% exp_fl
   B_ <- exp_xl - A_
   C_ <- solve( exp_ll )
@@ -123,8 +122,8 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
   ####### extract elements from input list 'start'
   Phi <- start$Phi
   Lambda_s <- start$Lambda_s
-  psi_s <- start$psi_s
-  beta <- start$beta
+  psi_s <- start$Psi_s
+  beta <- start$Beta
 
   # get some basic variables needed for computation
   j_s <- n_s <- numeric(S)
@@ -208,7 +207,8 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
       exp_xl, 
       exp_fl, 
       exp_ll, 
-      j_s
+      j_s,
+      p
     )
 
     ## CM4 ----
@@ -244,16 +244,23 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
     Phi_new[upper.tri(Phi_new)] <- 0
     phi_val <- as.vector(Phi_new[lower.tri(Phi_new, diag = TRUE)])
     for (s in 1:S){
-      Lambda_new[[s]][upper.tri(Lambda_new[[s]])] <- 0
-      lambda_vals <- c(lambda_vals, as.vector(Lambda_new[[s]][lower.tri(Lambda_new[[s]], diag = TRUE)]))
+      Lambda_new[[s]][upper.tri(Lambda_new[[s]])] <- 0 
+      if (constraint == "block_lower1") {
+        L <- Lambda_new[[s]][-(1:k),]
+        lambda_vals <- c(lambda_vals, as.vector(L[lower.tri(L, diag = TRUE)]))
+      } else { 
+        # block_lower2 case
+        lambda_vals <- c(lambda_vals, as.vector(Lambda_new[[s]][lower.tri(Lambda_new[[s]], diag = TRUE)]))
+      }
       psi_new[[s]] <- diag(Psi_new[[s]])
       psi_vals <- c(psi_vals, psi_new[[s]])
     }
     L_sTOT <- Reduce('cbind', Lambda_new)
     Omega <- cbind(Phi_new, L_sTOT)
-    rank_tot <-  qr(Omega)$rank
+    rank_tot <- qr(Omega)$rank
     # cat("Rank after update ", rank_tot, "\n")
     theta_new <- theta_test <- c(phi_val, lambda_vals, psi_vals)
+    # theta_new <- theta_test <- .param2vect(list(Phi = Phi_new, Lambda_s = Lambda_new, Psi_s = psi_new), constraint = constraint)
     param.struct <- list(Phi = Phi_new, Lambda_s = Lambda_new, psi_s=psi_new)
     Delta <- theta_new - theta
     sh <- 0   ###no more than 20 step-halving rounds
@@ -277,7 +284,6 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
     }
 
     if(sh==20) stop("The full rank condition does not hold\n")
-
 
     ## stopping rule ----
     # Sig_s <- Map( .build_Sig, list( Phi ), Lambda_s, Psi_s )
