@@ -117,7 +117,7 @@ ecm_fa <- function(X_s, tot_s, nIt = 50000, tol = 10^-7, block_lower = TRUE, rob
   n_tot <- sum(n_s)
   AIC <- -2 * l1 + npar * 2
   BIC <- -2 * l1 + npar * log(n_tot)
-  res <- list(Omega_s = Omega_s, psi_s = psi_s, loglik = l1, AIC = AIC,
+  res <- list(Omega_s = Omega_s, Psi_s = psi_s, loglik = l1, AIC = AIC,
               BIC = BIC, npar=npar, iter = i)
   return(res)
 }

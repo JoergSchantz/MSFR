@@ -25,7 +25,7 @@
 #' @references Pison, G., Rousseeuw, P.J., Filzmoser, P. and Croux, C. (2003). Robust factor analysis. Journal
 #' Multivariate Analysis, 84, 145-172.
 #' @return A list  containing the following components:
-#' \item{\code{Phi_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
+#' \item{\code{Phi_s}, \code{Beta} and \code{Psi_s}}{the estimated model matrices.}
 #' \item{loglik}{the value of the log likelihood function at the final estimates.}
 #' \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 #' \item{\code{npar}}{number of model parameters.}
@@ -37,7 +37,7 @@
 #' Phi_1 <- EM$Phi_s[[1]]
 #' # ...
 #' # regression matrix
-#' beta <- EM$beta
+#' Beta <- EM$Beta
 #' # study-specific error matrices
 #' Psi_1 <- EM$Psi_s[[1]]
 #' # ...
@@ -209,7 +209,7 @@ ecm_fr <- function(
   BIC   <- -2 * l1 + npar * log( n_tot )
   res   <- list( Phi = Phi_s,
                  Psi_s = psi_s,
-                 beta = Beta_s,
+                 Beta = Beta_s,
                  loglik = l1,
                  AIC = AIC,
                  BIC = BIC,

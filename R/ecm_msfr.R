@@ -1,26 +1,26 @@
-#' @keywords internal
-.build_Sig <-  function( Phi, Lambda_s, Psi_s ){
-  # simple generator for Sigma matrix 
-  tcrossprod( Phi ) + tcrossprod( Lambda_s ) + Psi_s
-}
+# #' @keywords internal
+# .build_Sig <-  function( Phi, Lambda_s, Psi_s ){
+#   # simple generator for Sigma matrix 
+#   tcrossprod( Phi ) + tcrossprod( Lambda_s ) + Psi_s
+# }
 
-#' @importFrom statmod vecmat 
-#' @importFrom statmod matvec
-#' @keywords internal
-.inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
-  # Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
-  # until I figure out how to retrieve it from the Woodbury Identity
-  k <- dim( Phi )[2]
-  j_s <- dim( Lambda_s )[2]
+# #' @importFrom statmod vecmat 
+# #' @importFrom statmod matvec
+# #' @keywords internal
+# .inv_Sig <- function( Psi_s1, Lambda_s, Phi ){
+#   # Since direct calculation of Sigma's inverse is currelty only needed once its okay to have it as a seperate function
+#   # until I figure out how to retrieve it from the Woodbury Identity
+#   k <- dim( Phi )[2]
+#   j_s <- dim( Lambda_s )[2]
 
-  LambTOT <- cbind( Lambda_s, Phi )                    # build once
-  psi_vec <- diag( Psi_s1 )                            # extract once
-  PsiInv_U <- statmod::vecmat( psi_vec, LambTOT )      # compute once
+#   LambTOT <- cbind( Lambda_s, Phi )                    # build once
+#   psi_vec <- diag( Psi_s1 )                            # extract once
+#   PsiInv_U <- statmod::vecmat( psi_vec, LambTOT )      # compute once
 
-  inv <- solve( diag( 1, k + j_s ) + crossprod( LambTOT, PsiInv_U ) )
+#   inv <- solve( diag( 1, k + j_s ) + crossprod( LambTOT, PsiInv_U ) )
 
-  Psi_s1 - PsiInv_U %*% tcrossprod( inv, PsiInv_U )
-}
+#   Psi_s1 - PsiInv_U %*% tcrossprod( inv, PsiInv_U )
+# }
 
 #'@keywords internal
 .update_Psi <- function(cov, Phi, Lambda, exp_ff, exp_ll, exp_xf, exp_xl, exp_fl) {
@@ -85,7 +85,7 @@
 #' number of variables. Again, the latter strategy is mentioned in De Vito et al. (2018).
 #' @param trace If \code{TRUE} then trace information is being printed every 1000 iterations of the ECM algorithm.
 #' @return A list  containing the following components:
-#' \item{\code{Phi},\code{Lambda_s}, \code{beta} and \code{Psi_s}}{the estimated model matrices.}
+#' \item{\code{Phi},\code{Lambda_s}, \code{Beta} and \code{Psi_s}}{the estimated model matrices.}
 #' \item{loglik}{the value of the log likelihood function at the final estimates.}
 #' \item{\code{AIC, BIC}}{model selection criteria at the estimate.}
 #' \item{\code{npar}}{number of model parameters.}
@@ -111,7 +111,7 @@
 #' Lambda_1 <- EM$Lambda_s[[1]]
 #' Lambda_2 <- EM$Lambda_s[[2]]
 #' # estimated regression coefficients 
-#' beta <- EM$beta
+#' Beta <- EM$Beta
 #' # study-specific error matrices
 #' Psi_1 <- EM$Psi_s[[1]]
 #' Psi_2 <- EM$Psi_s[[2]]
@@ -252,6 +252,7 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
     L_sTOT <- Reduce('cbind', Lambda_new)
     Omega <- cbind(Phi_new, L_sTOT)
     rank_tot <-  qr(Omega)$rank
+    # cat("Rank after update ", rank_tot, "\n")
     theta_new <- theta_test <- c(phi_val, lambda_vals, psi_vals)
     param.struct <- list(Phi = Phi_new, Lambda_s = Lambda_new, psi_s=psi_new)
     Delta <- theta_new - theta
@@ -317,7 +318,7 @@ ecm_msfr <- function(X_s, B_s, start, nIt = 50000, tol = 10^-7, constraint = "bl
   BIC <- -2 * l1 + npar * log(n_tot)
 
   # return output ----
-  res <- list(Phi = Phi, Lambda_s = Lambda_s, beta = beta, Psi_s = psi_s, loglik = l1,
+  res <- list(Phi = Phi, Lambda_s = Lambda_s, Beta = beta, Psi_s = psi_s, loglik = l1,
               AIC = AIC, BIC = BIC, npar=npar,
               iter = i,  cov_s = cov_s,  n_s = n_s, constraint=constraint)
   # write.csv2(l.df, "likelihoods_no253.csv")
