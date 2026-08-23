@@ -6,7 +6,7 @@ author:
 - Jörg Schantz
 ---
 
-Fit the Multi-Study Factor Regression model via the [ECM algorithm](https://arxiv.org/pdf/1611.06350).
+Fit the Multi-Study Factor Regression model via the [ECM algorithm](https://doi.org/10.1002/sim.70108).
 
 ## Fitting the MSFR model via the ECM Algorithm
 
