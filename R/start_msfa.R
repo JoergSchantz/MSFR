@@ -20,7 +20,7 @@
 #' Default is \code{"adhoc"}.
 #' @param tol Only needed if \code{method = "fa"}. Tolerance parameter as in \code{ecm_fa()}.
 #' @param nIt Only needed if \code{method = "fa"}. Number of iterations parameter as in \code{ecm_fa()}.
-#' @return A list  containing  \code{Phi},\code{Lambda_s}, \code{psi_s} and \code{beta} starting values for the model matrices.
+#' @return A list  containing  \code{Phi},\code{Lambda_s}, \code{Psi_s} and \code{Beta} starting values for the model matrices.
 #' @import psych stats
 #' @export
 #' @references De Vito, R., Bellio, R., Parmigiani, G. and Trippa, L. (2019). Multi-study Factor Analysis. Biometrics,  75, 337-346.
@@ -87,6 +87,6 @@ start_msfa <- function(X_s, B_s, k, j_s, constraint = "block_lower2", method = "
       psi_s[[s]] <- est$psi_s[[s]]
     }
   }
-  out <- list(Phi=Phi, Lambda_s=Lambda_s, psi_s=psi_s, beta=beta)
+  out <- list(Phi=Phi, Lambda_s=Lambda_s, Psi_s=psi_s, Beta=beta)
   return(out)
 }

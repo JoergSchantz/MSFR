@@ -41,7 +41,7 @@ Default is \code{"adhoc"}.}
 \item{nIt}{Only needed if \code{method = "fa"}. Number of iterations parameter as in \code{ecm_fa()}.}
 }
 \value{
-A list  containing  \code{Phi},\code{Lambda_s}, \code{psi_s} and \code{beta} starting values for the model matrices.
+A list  containing  \code{Phi},\code{Lambda_s}, \code{Psi_s} and \code{Beta} starting values for the model matrices.
 }
 \description{
 This is a supporting function for \code{ecm_msfa}. The method employed is documented in the reference.
