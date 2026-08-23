@@ -3,19 +3,6 @@
 ## lets goooo
 
 #' @keywords internal
-#' since we are storing our e.g. study specific matrices, in lists its good to have
-#' function that converts all of these lists into an new list of arguemnts for any 
-#' usecase. This enables us to make use of the vectorization of R.
-.make_args <-  function( LIST, ... ) {
-  # check if all sublists have same length
-  if ( ! length( unique( lengths( LIST ) ) ) == 1 ) {
-    stop("Unequal number of elements!") # Improve message in the future
-  }
-  n <-  unique( lengths( LIST ) )
-  lapply( 1:n, function( s ) { lapply( LIST, `[[`, s ) } )
-}
-
-#' @keywords internal
 #' Computes trace of a matrix
 .tr <- function( A ) sum( diag( A ) )
 
