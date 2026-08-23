@@ -25,14 +25,14 @@
 #' @import statmod
 #' @importFrom pracma grad
 #' @importFrom pracma hessian
-vcov_msfa <- function(X_s, mle, getgrad = TRUE)
+vcov_msfa <- function(X_s, mle, getgrad = FALSE)
 {
   constraint <- mle$constraint
   p <- ncol(X_s[[1]])
   k <- ncol(mle$Phi)
   S <- length(X_s)
   j_s <- c()
-  for(s in 1:S) j_s[[s]] <- ncol(mle$Lambda_s[[s]])
+  for(s in 1:S) j_s[s] <- ncol(mle$Lambda_s[[s]])
   theta <- .param2vect(mle, mle$constraint)
   gout <- NULL
   if(getgrad) gout <- pracma::grad(.loglik_int, x = theta, n_s = mle$n_s,
