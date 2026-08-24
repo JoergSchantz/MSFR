@@ -4,7 +4,7 @@
 \alias{vcov_msfa}
 \title{Variance matrix of MLE estimates for a MSFA model}
 \usage{
-vcov_msfa(X_s, mle, getgrad = TRUE)
+vcov_msfa(X_s, mle, getgrad = FALSE)
 }
 \arguments{
 \item{X_s}{List of lenght \eqn{S}{S}, corresponding to number of different studies considered.

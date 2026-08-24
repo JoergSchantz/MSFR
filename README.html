@@ -372,8 +372,8 @@ data(Scenario1_MSFR)</code></pre>
 </div>
 <div id="obtaining-suitable-starting-values-for-model-parameters" class="section level3">
 <h3>Obtaining suitable starting values for model parameters</h3>
-<p>Then we get inizialization for model parameters, with q=3 common
-factors and q_s=1 study-specific factors for two studies (S=2).</p>
+<p>Then we get inizialization for model parameters, with k=3 common
+factors and j_s=[1,1] study-specific factors for two studies (S=2).</p>
 <pre class="r"><code>start_value &lt;- start_msfa(X_s, B_s, k, j_s, constraint = &quot;block_lower2&quot;, method = &quot;adhoc&quot;)</code></pre>
 </div>
 <div id="fitting-the-model-via-ecm" class="section level3">

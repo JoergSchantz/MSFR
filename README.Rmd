@@ -21,8 +21,8 @@ data(Scenario1_MSFR)
 ```
 
 ### Obtaining suitable starting values for model parameters
-Then we get inizialization for model parameters, with q=3 common
-factors and q_s=1 study-specific factors for two studies (S=2).
+Then we get inizialization for model parameters, with k=3 common
+factors and j_s=[1,1] study-specific factors for two studies (S=2).
 
 ```{r, starting values, eval = FALSE}
 start_value <- start_msfa(X_s, B_s, k, j_s, constraint = "block_lower2", method = "adhoc")
