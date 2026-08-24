@@ -12,12 +12,10 @@
 
 #' @keywords internal
 #' Same as .inv_Psi(), but returns the length-p diagonal as a plain vector
-#' instead of a dense p x p matrix. Psi_s^-1 is always diagonal, so callers
-#' that only ever feed it into .wb_identity()/.wb_identity2() (as opposed to
-#' needing a real p x p object, e.g. for kronecker() in ecm_fr.R) should use
-#' this instead: it lets those functions take their vector-aware fast path
-#' and skip an O(p^2) allocation entirely. See .wb_identity()'s docs.
+#' instead of a dense p x p matrix.
 .inv_Psi_vec <- function( Psi ) 1 / diag( Psi )
+
+
 
 #' @keywords internal
 .loglik_ecm <- function( Sig_s1, ds_s, n_s, cov_s )
